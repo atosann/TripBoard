@@ -100,3 +100,14 @@ export function formatDateTime(date: string | Date): string {
     minute: '2-digit',
   });
 }
+
+// メールアドレスのバリデーション
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+// パスワードのバリデーション（8文字以上）
+export function validatePassword(password: string): boolean {
+  return password.length >= 8
+}
