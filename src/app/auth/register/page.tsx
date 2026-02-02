@@ -31,8 +31,8 @@ export default function RegisterPage() {
     }
 
     const passwordValidation = validatePassword(formData.password);
-    if (!passwordValidation.valid) {
-      setError(passwordValidation.message || 'パスワードが無効です');
+    if (!passwordValidation) {
+      setError('パスワードは8文字以上である必要があります');
       return;
     }
 
