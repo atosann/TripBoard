@@ -84,6 +84,7 @@ export default async function ManageRequestsPage({
           requests={requests}
           postId={id}
           postTitle={post.title}
+          postAuthorId={post.user_id}
         />
       </div>
     </div>
