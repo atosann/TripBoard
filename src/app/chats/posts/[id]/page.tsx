@@ -1,12 +1,14 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
-import ChatInterface from '@/components/ChatInterface'
+import { ChatInterface } from '@/components/ChatInterface'
 
 export default async function ChatRoomPage({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Promise<{ id: string }> 
 }) {
+  const { id } = await params  // paramsをawait
+  
   const supabase = await createServerClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -19,13 +21,13 @@ export default async function ChatRoomPage({
     .from('chat_rooms')
     .select(`
       *,
-      posts(title),
+      posts(id, title),
       chat_participants(
         user_id,
-        profiles(username, avatar_url)
+        profiles(id, username, avatar_url)
       )
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!chatRoom) {
@@ -41,6 +43,23 @@ export default async function ChatRoomPage({
     notFound()
   }
 
+  // メッセージを取得
+  const { data: messages } = await supabase
+    .from('messages')
+    .select(`
+      *,
+      profiles(id, username, avatar_url)
+    `)
+    .eq('chat_room_id', id)
+    .order('created_at', { ascending: true })
+
+  // メンバー情報を整形
+  const members = chatRoom.chat_participants.map((p: any) => ({
+    id: p.profiles.id,
+    username: p.profiles.username,
+    avatar_url: p.profiles.avatar_url,
+  }))
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -48,9 +67,12 @@ export default async function ChatRoomPage({
           {chatRoom.posts?.title} - チャット
         </h1>
         <ChatInterface 
-          chatRoomId={params.id} 
+          chatRoomId={id}
+          postId={chatRoom.posts.id}
+          postTitle={chatRoom.posts.title}
           currentUserId={user.id}
-          participants={chatRoom.chat_participants}
+          initialMessages={messages || []}
+          members={members}
         />
       </div>
     </div>
