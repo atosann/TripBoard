@@ -100,7 +100,9 @@ const { data, error } = await supabase
 // データ挿入
 const { data, error } = await supabase
   .from('posts')
-  .insert({ title: 'Test' });
+  .insert({ title: 'タイトル',
+    content: '内容',
+    author_id: user.id,});
 ```
 
 ### マイグレーション

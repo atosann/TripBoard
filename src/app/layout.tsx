@@ -5,8 +5,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Trip Board - 近場散策掲示板',
-  description: '日帰り・近場散策の参加者を募集できる掲示板SNS',
+  title: 'みんなのメンバー募集掲示板',
+  description: '日帰り・近場から遠出・旅行までの参加者を募集できる掲示板SNS',
 };
 
 export default function RootLayout({

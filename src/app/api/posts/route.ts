@@ -1,11 +1,15 @@
-// src/app/api/posts/route.ts
+// src/app/api/posts/[id]/route.ts
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { postRateLimit } from '@/lib/rate-limit';
 
-export async function POST(request: NextRequest) {
+// 投稿の取得
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const cookieStore = await cookies();
+  const { id } = await context.params;
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,7 +31,110 @@ export async function POST(request: NextRequest) {
       },
     }
   );
+
+  console.log('📌 取得する投稿ID:', id);
+
+  // まず基本的な投稿データのみ取得してみる
+  const { data: basicPost, error: basicError } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (basicError) {
+    console.error('❌ 基本投稿取得エラー:', basicError);
+    return NextResponse.json(
+      { error: '投稿が見つかりません', details: basicError.message },
+      { status: 404 }
+    );
+  }
+
+  if (!basicPost) {
+    console.error('❌ 投稿が存在しません');
+    return NextResponse.json(
+      { error: '投稿が見つかりません' },
+      { status: 404 }
+    );
+  }
+
+  console.log('✅ 基本投稿データ取得成功');
+
+  // 次に関連データを取得
+  try {
+    // 作成者情報を取得
+    const { data: author } = await supabase
+      .from('users')
+      .select('id, display_name')
+      .eq('id', basicPost.author_id)
+      .single();
+
+    // カテゴリー情報を取得
+    const { data: category } = await supabase
+      .from('categories')
+      .select('id, name, icon')
+      .eq('id', basicPost.category_id)
+      .single();
+
+    // 参加者数を取得
+    const { count: participantCount } = await supabase
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', id);
+
+    // データを結合
+    const post = {
+      ...basicPost,
+      author,
+      category,
+      participants: [{ count: participantCount || 0 }]
+    };
+
+    console.log('✅ 全データ取得成功');
+
+    return NextResponse.json({ data: post });
+  } catch (err) {
+    console.error('❌ 関連データ取得エラー:', err);
+    // エラーが出ても基本データだけ返す
+    return NextResponse.json({ 
+      data: {
+        ...basicPost,
+        author: null,
+        category: null,
+        participants: [{ count: 0 }]
+      }
+    });
+  }
+}
+
+// 投稿の更新
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const cookieStore = await cookies();
+  const { id } = await context.params;
   
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Server Componentからは無視
+          }
+        },
+      },
+    }
+  );
+
   // 現在のユーザーを取得
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   
@@ -38,32 +145,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ⭐ レート制限チェック
-  const { success, limit, remaining, reset } = await postRateLimit.limit(user.id);
-  
-  if (!success) {
+  // 投稿を取得して権限を確認
+  const { data: existingPost, error: fetchError } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !existingPost) {
     return NextResponse.json(
-      { 
-        error: '投稿制限に達しました。1時間後にお試しください。',
-        limit,
-        remaining,
-        reset: new Date(reset).toLocaleString('ja-JP')
-      },
-      { 
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': limit.toString(),
-          'X-RateLimit-Remaining': remaining.toString(),
-          'X-RateLimit-Reset': reset.toString(),
-        }
-      }
+      { error: '投稿が見つかりません' },
+      { status: 404 }
     );
   }
-  
+
+  // 作成者のみ編集可能
+  if (existingPost.author_id !== user.id) {
+    return NextResponse.json(
+      { error: '編集権限がありません' },
+      { status: 403 }
+    );
+  }
+
   // リクエストボディを取得
   const body = await request.json();
   const { title, description, category_id, latitude, longitude, event_date, max_participants } = body;
-  
+
   // バリデーション
   if (!title || !description || !category_id || !latitude || !longitude || !event_date) {
     return NextResponse.json(
@@ -71,7 +178,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-  
+
   // スパムチェック（簡易版）
   const spamKeywords = ['副業', '稼げる', '投資', 'LINE', 'DM', '出会い'];
   const content = (title + ' ' + description).toLowerCase();
@@ -83,54 +190,68 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-  
-  // 投稿を作成
-  const { data: post, error } = await supabase
+
+  // 投稿を更新
+  const { data: updatedPost, error: updateError } = await supabase
     .from('posts')
-    .insert({
-      author_id: user.id,
+    .update({
       title,
       description,
       category_id,
       latitude,
       longitude,
       event_date,
-      max_participants: max_participants || 10,
-      status: 'open',
+      max_participants: max_participants || existingPost.max_participants,
+      updated_at: new Date().toISOString(),
     })
-    .select()
+    .eq('id', id)
+    .select('*')
     .single();
-  
-  if (error) {
-    console.error('投稿作成エラー:', error);
+
+  if (updateError) {
+    console.error('投稿更新エラー:', updateError);
     return NextResponse.json(
-      { error: '投稿の作成に失敗しました: ' + error.message },
+      { error: '投稿の更新に失敗しました: ' + updateError.message },
       { status: 500 }
     );
   }
-  
-  // 作成者を自動的に参加者として登録
-  await supabase
+
+  // 関連データを取得
+  const { data: author } = await supabase
+    .from('users')
+    .select('id, display_name')
+    .eq('id', updatedPost.author_id)
+    .single();
+
+  const { data: category } = await supabase
+    .from('categories')
+    .select('id, name, icon')
+    .eq('id', updatedPost.category_id)
+    .single();
+
+  const { count: participantCount } = await supabase
     .from('participants')
-    .insert({
-      post_id: post.id,
-      user_id: user.id,
-      status: 'joined',
-    });
-  
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', id);
+
   return NextResponse.json({ 
     success: true, 
-    data: post,
-    rateLimit: {
-      remaining,
-      reset: new Date(reset).toLocaleString('ja-JP')
+    data: {
+      ...updatedPost,
+      author,
+      category,
+      participants: [{ count: participantCount || 0 }]
     }
   });
 }
 
-// 投稿一覧取得（レート制限なし）
-export async function GET(request: NextRequest) {
+// 投稿の削除
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const cookieStore = await cookies();
+  const { id } = await context.params;
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -152,26 +273,59 @@ export async function GET(request: NextRequest) {
       },
     }
   );
+
+  // 現在のユーザーを取得
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
   
-  const { data: posts, error } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      author:users!posts_author_id_fkey(id, display_name),
-      category:categories(id, name, icon),
-      participants:participants(count)
-    `)
-    .eq('status', 'open')
-    .eq('is_hidden', false)
-    .order('created_at', { ascending: false })
-    .limit(50);
-  
-  if (error) {
+  if (userError || !user) {
     return NextResponse.json(
-      { error: 'データ取得に失敗しました' },
+      { error: 'ログインが必要です' },
+      { status: 401 }
+    );
+  }
+
+  // 投稿を取得して権限を確認
+  const { data: existingPost, error: fetchError } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !existingPost) {
+    return NextResponse.json(
+      { error: '投稿が見つかりません' },
+      { status: 404 }
+    );
+  }
+
+  // 作成者のみ削除可能
+  if (existingPost.author_id !== user.id) {
+    return NextResponse.json(
+      { error: '削除権限がありません' },
+      { status: 403 }
+    );
+  }
+
+  // 論理削除
+  const { error: deleteError } = await supabase
+    .from('posts')
+    .update({ 
+      status: 'deleted',
+      is_hidden: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if (deleteError) {
+    console.error('投稿削除エラー:', deleteError);
+    return NextResponse.json(
+      { error: '投稿の削除に失敗しました: ' + deleteError.message },
       { status: 500 }
     );
   }
-  
-  return NextResponse.json({ data: posts });
+
+  return NextResponse.json({ 
+    success: true,
+    message: '投稿を削除しました' 
+  });
 }

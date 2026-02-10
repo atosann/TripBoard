@@ -1,8 +1,9 @@
-import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+// lib/supabase-server.ts
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export async function createServerClient() {
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
 
   return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,18 +11,18 @@ export async function createServerClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
-            )
+            );
           } catch {
-            // サーバーコンポーネントから呼び出された場合は無視
+            // Server Component内ではcookieのsetができない場合がある
           }
         },
       },
     }
-  )
+  );
 }

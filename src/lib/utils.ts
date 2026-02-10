@@ -1,15 +1,20 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+/**
+ * Tailwind CSSのクラス名を結合するユーティリティ関数
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// 相対時間フォーマット（例: 3分前、1時間前）
-export function formatRelativeTime(date: string | Date): string {
+/**
+ * 相対的な時間表示を生成（例: "3分前", "2時間前"）
+ */
+export function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
   const now = new Date();
-  const targetDate = typeof date === 'string' ? new Date(date) : date;
-  const diffInSeconds = Math.floor((now.getTime() - targetDate.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
     return 'たった今';
@@ -44,70 +49,19 @@ export function formatRelativeTime(date: string | Date): string {
   return `${diffInYears}年前`;
 }
 
-// スパムチェック
+/**
+ * スパムや不適切な内容をチェック
+ */
 export function isSpam(text: string): boolean {
-  const spamKeywords = [
-    '副業', '稼げる', '投資', 'LINE', 'DM', '出会い',
-    'マルチ', 'ネットワーク', '勧誘', 'ビジネス',
-    '儲かる', '簡単に', '月収', '不労所得'
+  const spamPatterns = [
+    /https?:\/\//i, // URL
+    /(\d{2,4}[-.\s]?\d{2,4}[-.\s]?\d{4})/g, // 電話番号
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, // メールアドレス
+    /(LINE|line|ライン).{0,10}(ID|アイ[デディ]ー|id)/gi, // LINE ID
+    /(Twitter|twitter|X|ツイッター|インスタ|Instagram).{0,10}(ID|アイ[デディ]ー|フォロー)/gi, // SNS
+    /(振込|振り込み|送金|お金|現金|報酬|バイト|高収入|稼げる|副業)/gi, // 金銭関連
+    /(会いたい|会おう|会える|デート|泊まり|ホテル)/gi, // 出会い系
   ];
 
-  const lowerText = text.toLowerCase();
-  
-  // スパムキーワードチェック
-  const hasSpamKeyword = spamKeywords.some(keyword => 
-    lowerText.includes(keyword.toLowerCase())
-  );
-
-  // URL過多チェック（3個以上のURLはスパム）
-  const urlCount = (text.match(/https?:\/\//g) || []).length;
-  const hasTooManyUrls = urlCount >= 3;
-
-  return hasSpamKeyword || hasTooManyUrls;
-}
-
-// 座標をぼかす（±500m程度）
-export function blurCoordinates(lat: number, lng: number): { lat: number; lng: number } {
-  // 約500m = 0.0045度（緯度経度）
-  const offset = 0.0045;
-  const randomLat = (Math.random() - 0.5) * offset;
-  const randomLng = (Math.random() - 0.5) * offset;
-  
-  return {
-    lat: lat + randomLat,
-    lng: lng + randomLng,
-  };
-}
-
-// 日付フォーマット（例: 2024年1月15日）
-export function formatDate(date: string | Date): string {
-  const targetDate = typeof date === 'string' ? new Date(date) : date;
-  return targetDate.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-// 日時フォーマット（例: 2024年1月15日 14:30）
-export function formatDateTime(date: string | Date): string {
-  const targetDate = typeof date === 'string' ? new Date(date) : date;
-  return targetDate.toLocaleString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-// メールアドレスのバリデーション
-export function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
-// パスワードのバリデーション（8文字以上）
-export function validatePassword(password: string): boolean {
-  return password.length >= 8
+  return spamPatterns.some(pattern => pattern.test(text));
 }

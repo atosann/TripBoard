@@ -1,313 +1,355 @@
-// src/app/main/page.tsx
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
-export default async function TopPage() {
-  const cookieStore = await cookies()
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+export default function TopPage() {
+  // 投稿例のデータ
+  const examplePosts = [
     {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
+      id: 1,
+      category: 'カラオケ',
+      icon: '🎤',
+      color: 'from-pink-500 to-rose-500',
+      title: '渋谷でカラオケオフ会！',
+      author: 'カラオケ太郎',
+      participants: '3/5人',
+      date: '2026年2月15日 19:00',
+      location: '東京都',
+      description: 'アニソン中心に歌いませんか？初心者歓迎です！'
+    },
+    {
+      id: 2,
+      category: '登山',
+      icon: '⛰️',
+      color: 'from-green-500 to-emerald-500',
+      title: '高尾山ハイキング仲間募集',
+      author: '山田健太',
+      participants: '4/8人',
+      date: '2026年2月20日 9:00',
+      location: '東京都',
+      description: '初心者向けのゆるい登山です。一緒に自然を楽しみましょう！'
+    },
+    {
+      id: 3,
+      category: '居酒屋',
+      icon: '🍺',
+      color: 'from-orange-500 to-amber-500',
+      title: '新宿で飲み会メンバー募集',
+      author: '飲み会幹事',
+      participants: '6/10人',
+      date: '2026年2月18日 18:30',
+      location: '東京都',
+      description: '20代~30代で楽しく飲みましょう！予算3000円程度です。'
+    },
+    {
+      id: 4,
+      category: 'フットサル',
+      icon: '⚽',
+      color: 'from-blue-500 to-cyan-500',
+      title: '週末フットサルメンバー募集',
+      author: 'サッカー好き',
+      participants: '8/12人',
+      date: '2026年2月22日 14:00',
+      location: '神奈川県',
+      description: '初心者も大歓迎！楽しくプレーしましょう！'
+    },
+    {
+      id: 5,
+      category: 'カフェ巡り',
+      icon: '☕',
+      color: 'from-purple-500 to-pink-500',
+      title: '表参道カフェ巡りしませんか',
+      author: 'カフェ好き',
+      participants: '2/4人',
+      date: '2026年2月16日 13:00',
+      location: '東京都',
+      description: 'おしゃれなカフェを巡りながらお話ししましょう！'
+    },
+    {
+      id: 6,
+      category: 'ボードゲーム',
+      icon: '🎲',
+      color: 'from-indigo-500 to-blue-500',
+      title: 'ボードゲームカフェで遊ぼう',
+      author: 'ゲーム王',
+      participants: '5/6人',
+      date: '2026年2月19日 15:00',
+      location: '東京都',
+      description: '人狼やカタンなど、いろんなゲームで盛り上がりましょう！'
+    },
+    {
+      id: 7,
+      category: '温泉旅行',
+      icon: '♨️',
+      color: 'from-red-500 to-pink-500',
+      title: '箱根温泉一泊二日の旅',
+      author: '温泉マニア',
+      participants: '4/6人',
+      date: '2026年3月5日 10:00',
+      location: '神奈川県',
+      description: '箱根の温泉旅館に泊まって、のんびり温泉三昧！美味しい料理も楽しみましょう。'
+    },
+    {
+      id: 8,
+      category: '日帰り旅行',
+      icon: '🚅',
+      color: 'from-teal-500 to-green-500',
+      title: '京都日帰り観光ツアー',
+      author: '旅行好き',
+      participants: '5/8人',
+      date: '2026年2月28日 7:00',
+      location: '京都府',
+      description: '清水寺、金閣寺、嵐山を巡る日帰りツアー！新幹線で気軽に京都を満喫しましょう。'
+    },
+    {
+      id: 9,
+      category: '海外旅行',
+      icon: '✈️',
+      color: 'from-sky-500 to-blue-500',
+      title: '台北3泊4日グルメ旅行',
+      author: 'グルメ旅人',
+      participants: '3/5人',
+      date: '2026年4月10日 8:00',
+      location: '海外（台湾）',
+      description: '小籠包、タピオカ、夜市グルメ！台北の美味しいものを食べ尽くす旅です。'
     }
-  )
+  ]
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
-
-  // 統計情報を取得
-  const { count: totalPosts } = await supabase
-    .from('posts')
-    .select('*', { count: 'exact', head: true })
-
-  const { count: myPosts } = await supabase
-    .from('posts')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
-  const { count: joinedPosts } = await supabase
-    .from('participants')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
-  // 最新の投稿を取得
-  const { data: recentPosts } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      profiles:user_id (
-        username,
-        avatar_url
-      )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  const categories = [
+    { name: 'カラオケ', icon: '🎤', color: 'bg-pink-100 text-pink-700 border-pink-200' },
+    { name: '登山・アウトドア', icon: '⛰️', color: 'bg-green-100 text-green-700 border-green-200' },
+    { name: '居酒屋・飲み会', icon: '🍺', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+    { name: 'スポーツ', icon: '⚽', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+    { name: 'カフェ巡り', icon: '☕', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+    { name: 'ゲーム', icon: '🎲', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+    { name: '旅行', icon: '✈️', color: 'bg-cyan-100 text-cyan-700 border-cyan-200' },
+    { name: 'その他', icon: '🎉', color: 'bg-gray-100 text-gray-700 border-gray-200' }
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-600">旅行掲示板</h1>
-          <div className="flex gap-4 items-center">
-            <Link
-              href="/main/posts/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
-            >
-              投稿を作成
-            </Link>
-            <form action="/auth/signout" method="post">
-              <button
-                type="submit"
-                className="text-gray-600 hover:text-gray-800"
-              >
-                ログアウト
-              </button>
-            </form>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      {/* ヒーローセクション */}
+      <header className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative container mx-auto px-4 py-20 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-white/30">
+              <span className="text-3xl">👥</span>
+              <span className="text-xl font-bold">メンバー募集掲示板</span>
+            </div>
           </div>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 drop-shadow-lg">
+            一緒に楽しもう！
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 text-emerald-50 max-w-3xl mx-auto leading-relaxed">
+            カラオケ、登山、飲み会、スポーツ...<br />
+            あなたの「やりたい！」を仲間と一緒に実現しよう
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/auth/signup">
+              <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-full shadow-2xl hover:shadow-3xl transition-all font-bold">
+                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                無料で始める
+              </Button>
+            </Link>
+            <Link href="/auth/login">
+              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white/20 text-lg px-8 py-6 rounded-full font-bold">
+                ログイン
+              </Button>
+            </Link>
+          </div>
+        </div>
+        {/* 装飾的な波 */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" fillOpacity="0.1"/>
+          </svg>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto flex">
-        {/* サイドバー */}
-        <aside className="w-64 bg-white border-r min-h-screen sticky top-16 self-start">
-          <nav className="p-4">
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/main"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  トップページ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/search"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  投稿を探す
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/all-posts"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  すべての投稿
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/my-posts"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  自分の投稿
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/joined"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  参加中の投稿
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/profile"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  プロフィール
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        {/* メインコンテンツ */}
-        <main className="flex-1 p-6">
-          {/* ウェルカムセクション */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-8 text-white mb-6">
-            <h2 className="text-3xl font-bold mb-2">ようこそ、旅行掲示板へ</h2>
-            <p className="text-blue-100">
-              一緒に旅行する仲間を見つけて、素敵な思い出を作りましょう
-            </p>
-          </div>
-
-          {/* 統計情報 */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">総投稿数</p>
-                  <p className="text-2xl font-bold">{totalPosts || 0}</p>
-                </div>
+      {/* 特徴セクション */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
+            こんなことができます
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-emerald-100">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+                🎯
               </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">イベント投稿</h3>
+              <p className="text-gray-600 leading-relaxed">
+                カラオケ、スポーツ、飲み会など、あなたのやりたいことを自由に投稿できます
+              </p>
             </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">あなたの投稿</p>
-                  <p className="text-2xl font-bold">{myPosts || 0}</p>
-                </div>
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-blue-100">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+                💬
               </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">チャット機能</h3>
+              <p className="text-gray-600 leading-relaxed">
+                参加者とリアルタイムでチャット。詳細な待ち合わせ場所などもスムーズに調整
+              </p>
             </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-purple-100 p-3 rounded-lg">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">参加中</p>
-                  <p className="text-2xl font-bold">{joinedPosts || 0}</p>
-                </div>
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-purple-100">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+                🤝
               </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">仲間との出会い</h3>
+              <p className="text-gray-600 leading-relaxed">
+                同じ趣味を持つ仲間と出会い、一緒に楽しい時間を過ごせます
+              </p>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* クイックアクション */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <Link
-              href="/main/search"
-              className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">投稿を探す</h3>
-                  <p className="text-sm text-gray-600">地域やキーワードで検索</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link
-              href="/main/posts/new"
-              className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">投稿を作成</h3>
-                  <p className="text-sm text-gray-600">旅行仲間を募集する</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-
-          {/* 最新の投稿 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">最新の投稿</h3>
-              <Link
-                href="/main/all-posts"
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+      {/* カテゴリセクション */}
+      <section className="py-16 px-4 bg-white">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">
+            人気のカテゴリ
+          </h2>
+          <p className="text-center text-gray-600 mb-12">
+            様々なジャンルのメンバー募集が集まっています
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map((category) => (
+              <div
+                key={category.name}
+                className={`${category.color} border-2 rounded-xl p-6 text-center hover:scale-105 transition-all cursor-pointer shadow-sm hover:shadow-md`}
               >
-                すべて見る →
-              </Link>
-            </div>
+                <div className="text-4xl mb-2">{category.icon}</div>
+                <div className="font-bold text-sm">{category.name}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <div className="space-y-4">
-              {recentPosts?.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/main/posts/${post.id}`}
-                  className="block border-b last:border-b-0 pb-4 last:pb-0 hover:bg-gray-50 p-3 rounded transition-colors"
-                >
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    {post.title}
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-1">
-                    {post.content}
-                  </p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                      {post.prefecture}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {new Date(post.start_date).toLocaleDateString('ja-JP')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      {post.profiles?.username || 'Unknown'}
+      {/* 投稿例セクション */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">
+            こんな募集があります
+          </h2>
+          <p className="text-center text-gray-600 mb-12">
+            実際の投稿例をご覧ください
+          </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {examplePosts.map((post) => (
+              <div
+                key={post.id}
+                className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all overflow-hidden border-2 border-gray-100 group"
+              >
+                <div className={`bg-gradient-to-r ${post.color} p-4 text-white`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">{post.icon}</span>
+                    <span className="text-sm font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                      {post.category}
                     </span>
                   </div>
-                </Link>
-              ))}
+                  <h3 className="text-xl font-bold group-hover:scale-105 transition-transform">
+                    {post.title}
+                  </h3>
+                </div>
+                <div className="p-5">
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {post.description}
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span>{post.author}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="font-semibold text-emerald-600">{post.participants}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{post.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      <span>{post.location}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              {!recentPosts || recentPosts.length === 0 ? (
-                <p className="text-center py-8 text-gray-500">
-                  まだ投稿がありません
-                </p>
-              ) : null}
+      {/* CTAセクション */}
+      <section className="py-20 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
+        <div className="container mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-bold mb-6">
+            今すぐ始めよう！
+          </h2>
+          <p className="text-xl mb-8 text-emerald-50">
+            無料で登録して、あなたも仲間を見つけませんか？
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/auth/signup">
+              <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 text-lg px-10 py-6 rounded-full shadow-2xl font-bold">
+                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                新規登録（無料）
+              </Button>
+            </Link>
+            <Link href="/main/all-posts">
+              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white/20 text-lg px-10 py-6 rounded-full font-bold">
+                投稿を見る
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* フッター */}
+      <footer className="bg-gray-900 text-gray-300 py-12 px-4">
+        <div className="container mx-auto max-w-6xl text-center">
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-2 text-2xl font-bold text-white mb-4">
+              <span>👥</span>
+              <span>メンバー募集掲示板</span>
             </div>
           </div>
-        </main>
-      </div>
+          <p className="text-sm text-gray-400 mb-6">
+            一緒に楽しもう！カラオケ、登山、飲み会、スポーツなど、様々なメンバー募集が集まる場所
+          </p>
+          <div className="flex justify-center gap-8 text-sm">
+            <Link href="/about" className="hover:text-white transition-colors">
+              サービスについて
+            </Link>
+            <Link href="/terms" className="hover:text-white transition-colors">
+              利用規約
+            </Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              プライバシーポリシー
+            </Link>
+            <Link href="/contact" className="hover:text-white transition-colors">
+              お問い合わせ
+            </Link>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-800 text-sm text-gray-500">
+            © 2026 メンバー募集掲示板. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

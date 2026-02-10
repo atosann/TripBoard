@@ -29,17 +29,35 @@ export function SearchBar({
   const [selectedPrefecture, setSelectedPrefecture] = useState(currentPrefecture)
 
   const handleSearch = () => {
-    const params = new URLSearchParams()
-    if (keyword) params.set('keyword', keyword)
-    if (selectedPrefecture) params.set('prefecture', selectedPrefecture)
+    // 都道府県が選択されている場合は専用ページに遷移
+    if (selectedPrefecture) {
+      router.push(`/main/prefecture/${encodeURIComponent(selectedPrefecture)}`)
+      return
+    }
     
-    const queryString = params.toString()
-    router.push(`${searchPath}${queryString ? `?${queryString}` : ''}`)
+    // キーワードのみの場合は検索ページに遷移
+    if (keyword.trim()) {
+      const params = new URLSearchParams()
+      params.set('keyword', keyword.trim())
+      router.push(`${searchPath}?${params.toString()}`)
+      return
+    }
+    
+    // 何も選択されていない場合は検索ページに戻る
+    router.push(searchPath)
   }
 
   const handleRegionChange = (region: string) => {
     setSelectedRegion(region)
     setSelectedPrefecture('') // 地域変更時は都道府県をリセット
+  }
+
+  const handlePrefectureChange = (prefecture: string) => {
+    setSelectedPrefecture(prefecture)
+    // 都道府県を選択したら即座に専用ページに遷移
+    if (prefecture) {
+      router.push(`/main/prefecture/${encodeURIComponent(prefecture)}`)
+    }
   }
 
   const handleReset = () => {
@@ -50,7 +68,7 @@ export function SearchBar({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-emerald-200">
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -69,7 +87,7 @@ export function SearchBar({
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="タイトルや内容で検索"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
         </div>
@@ -83,9 +101,9 @@ export function SearchBar({
             <select
               value={selectedRegion}
               onChange={(e) => handleRegionChange(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
             >
-              <option value="">すべて</option>
+              <option value="" disabled hidden>地域を選択</option>
               {Object.keys(REGIONS).map((region) => (
                 <option key={region} value={region}>
                   {region}
@@ -100,11 +118,11 @@ export function SearchBar({
             </label>
             <select
               value={selectedPrefecture}
-              onChange={(e) => setSelectedPrefecture(e.target.value)}
+              onChange={(e) => handlePrefectureChange(e.target.value)}
               disabled={!selectedRegion}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
             >
-              <option value="">すべて</option>
+              <option value="" disabled hidden>都道府県を選択</option>
               {selectedRegion && REGIONS[selectedRegion as keyof typeof REGIONS]?.map((pref) => (
                 <option key={pref} value={pref}>
                   {pref}
@@ -118,17 +136,55 @@ export function SearchBar({
         <div className="flex gap-2">
           <button
             onClick={handleSearch}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200"
           >
             検索
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             リセット
           </button>
         </div>
+
+        {/* 選択中の条件表示 */}
+        {(keyword || selectedPrefecture) && (
+          <div className="pt-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-2">検索条件:</p>
+            <div className="flex flex-wrap gap-2">
+              {keyword && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">
+                  キーワード: {keyword}
+                  <button
+                    onClick={() => setKeyword('')}
+                    className="hover:text-emerald-900"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              {selectedPrefecture && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">
+                  {selectedPrefecture}
+                  <button
+                    onClick={() => {
+                      setSelectedPrefecture('')
+                      setSelectedRegion('')
+                    }}
+                    className="hover:text-emerald-900"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

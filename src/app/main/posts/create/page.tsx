@@ -7,6 +7,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
+const PREFECTURES = [
+  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+  '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+  '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+  '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+]
+
 export default function CreatePostPage() {
   const router = useRouter()
   const supabase = createBrowserClient()
@@ -14,11 +24,10 @@ export default function CreatePostPage() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
-    event_date: '',
-    location_name: '',
-    latitude: 35.6812,
-    longitude: 139.7671,
+    content: '',
+    destination: '',
+    travel_date: '',
+    max_participants: 2,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,49 +51,92 @@ export default function CreatePostPage() {
         return
       }
 
-      console.log('Creating post with data:', {
-        author_id: user.id,
+      console.log('🔄 投稿作成開始:', {
+        user_id: user.id,
         title: formData.title,
-        description: formData.description,
-        event_date: formData.event_date,
-        location_name: formData.location_name,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
+        content: formData.content,
+        destination: formData.destination,
+        travel_date: formData.travel_date,
+        max_participants: formData.max_participants,
       })
 
-      const { data, error } = await supabase
+      // 1. 投稿を作成
+      const { data: post, error: postError } = await supabase
         .from('posts')
         .insert({
-          author_id: user.id,
+          user_id: user.id,
           title: formData.title,
-          description: formData.description,
-          event_date: formData.event_date,
-          location_name: formData.location_name,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-          status: 'open',
+          content: formData.content,
+          destination: formData.destination,
+          travel_date: formData.travel_date,
+          max_participants: formData.max_participants,
         })
         .select()
         .single()
 
-      if (error) {
-        console.error('Error creating post:', error)
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-        })
-        alert('投稿の作成に失敗しました: ' + (error.message || JSON.stringify(error)))
+      if (postError) {
+        console.error('=== POST ERROR START ===')
+        console.error('Full error:', postError)
+        console.error('Error message:', postError?.message)
+        console.error('Error code:', postError?.code)
+        console.error('=== POST ERROR END ===')
+        
+        const errorMsg = postError?.message || postError?.code || 'Unknown error'
+        alert(`投稿の作成に失敗しました:\n\n${errorMsg}`)
         setLoading(false)
         return
       }
 
-      console.log('Post created successfully:', data)
-      alert('投稿を作成しました！')
-      router.push('/main/posts')
+      console.log('✅ 投稿作成成功:', post)
+
+      // 2. チャットルームを作成
+      console.log('🔄 チャットルーム作成開始:', { post_id: post.id })
+      
+      const { data: chatRoom, error: chatRoomError } = await supabase
+        .from('chat_rooms')
+        .insert({
+          post_id: post.id
+        })
+        .select()
+        .single()
+
+      if (chatRoomError) {
+        console.error('❌ チャットルーム作成エラー:', chatRoomError)
+        alert('投稿は作成されましたが、チャットルームの作成に失敗しました')
+        setLoading(false)
+        return
+      }
+
+      console.log('✅ チャットルーム作成成功:', chatRoom)
+
+      // 3. 投稿者をチャットメンバーに追加
+      console.log('🔄 投稿者をメンバーに追加:', { 
+        chat_room_id: chatRoom.id, 
+        user_id: user.id 
+      })
+
+      const { error: memberError } = await supabase
+        .from('chat_members')
+        .insert({
+          chat_room_id: chatRoom.id,
+          user_id: user.id,
+          joined_at: new Date().toISOString()
+        })
+
+      if (memberError) {
+        console.error('❌ メンバー追加エラー:', memberError)
+        alert('チャットルームは作成されましたが、メンバー登録に失敗しました')
+        setLoading(false)
+        return
+      }
+
+      console.log('✅ 投稿者をメンバーに追加成功')
+
+      alert('✅ 投稿とチャットルームを作成しました！')
+      router.push('/main/all-posts')
+      
     } catch (error) {
-      console.error('Unexpected error:', error)
+      console.error('❌ 予期しないエラー:', error)
       alert('エラーが発生しました: ' + String(error))
     } finally {
       setLoading(false)
@@ -92,27 +144,37 @@ export default function CreatePostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/main/posts">
-              <Button variant="outline">← 戻る</Button>
+            <Link href="/main/all-posts">
+              <Button variant="outline" className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                戻る
+              </Button>
             </Link>
-            <h1 className="text-2xl font-bold">新規投稿</h1>
+            <h1 className="text-2xl font-bold text-gray-900">新規投稿</h1>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>散策の詳細を入力</CardTitle>
+        <Card className="shadow-xl border-0">
+          <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl">散策の詳細を入力</CardTitle>
+            <p className="text-emerald-50 text-sm mt-1">あなたの旅の計画を共有しましょう</p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* タイトル */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
                   タイトル *
                 </label>
                 <input
@@ -121,89 +183,188 @@ export default function CreatePostPage() {
                   maxLength={100}
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="例：新宿御苑で紅葉散歩"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  placeholder="例：新宿御苑で紅葉散歩しませんか？"
                 />
               </div>
 
+              {/* 説明 */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                   説明 *
                 </label>
                 <textarea
                   required
                   maxLength={500}
                   rows={5}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="散策の内容や集合場所について詳しく説明してください"
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
+                  placeholder="散策の内容、集合場所、持ち物などを詳しく説明してください"
                 ></textarea>
-                <p className="text-xs text-gray-500 mt-1">
-                  {formData.description.length}/500文字
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">
+                    {formData.content.length}/500文字
+                  </p>
+                  {formData.content.length > 450 && (
+                    <p className="text-xs text-amber-600">
+                      残り{500 - formData.content.length}文字
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* 目的地（都道府県） */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  目的地（都道府県） *
+                </label>
+                <select
+                  required
+                  value={formData.destination}
+                  onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="" disabled>都道府県を選択してください</option>
+                  {PREFECTURES.map((pref) => (
+                    <option key={pref} value={pref}>
+                      {pref}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 募集人数 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  募集人数 *
+                </label>
+                <select
+                  required
+                  value={formData.max_participants}
+                  onChange={(e) => setFormData({ ...formData, max_participants: Number(e.target.value) })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <option key={num} value={num}>
+                      {num}人
+                    </option>
+                  ))}
+                  <option value={15}>15人</option>
+                  <option value={20}>20人</option>
+                  <option value={30}>30人以上</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  主催者を含む総人数
                 </p>
               </div>
 
+              {/* 旅行日 */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                   開催日時 *
                 </label>
                 <input
                   type="datetime-local"
                   required
-                  value={formData.event_date}
-                  onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  value={formData.travel_date}
+                  onChange={(e) => setFormData({ ...formData, travel_date: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                   min={new Date().toISOString().slice(0, 16)}
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  集合場所の名前 *
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={100}
-                  value={formData.location_name}
-                  onChange={(e) => setFormData({ ...formData, location_name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="例：東京駅丸の内南口"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  位置情報
-                </label>
-                <p className="text-sm text-gray-600 mb-2">
-                  現在：東京駅周辺（デフォルト）
-                </p>
-                <p className="text-xs text-gray-500">
-                  ※詳細な位置情報は後のアップデートで地図から選択できるようになります
+                <p className="text-xs text-gray-500 mt-1">
+                  ※ 過去の日時は選択できません
                 </p>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                <p className="text-sm font-medium mb-2">⚠️ 注意事項</p>
-                <ul className="text-xs text-gray-700 space-y-1">
-                  <li>• 集合場所は公共の場所を指定してください</li>
-                  <li>• 個人情報（住所、電話番号など）は記載しないでください</li>
-                  <li>• 詳細な待ち合わせ場所はチャットで調整してください</li>
+              {/* 注意事項 */}
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg p-5">
+                <p className="text-sm font-semibold mb-3 flex items-center gap-2 text-amber-800">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  投稿前の注意事項
+                </p>
+                <ul className="text-xs text-gray-700 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>集合場所は公共の場所を指定してください</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>個人情報（住所、電話番号など）は記載しないでください</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>詳細な待ち合わせ場所はチャットで調整してください</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>募集人数は主催者（あなた）を含む総人数です</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-600 mt-0.5">✓</span>
+                    <span className="font-semibold text-emerald-700">投稿と同時にチャットルームが自動作成されます</span>
+                  </li>
                 </ul>
               </div>
 
-              <div className="flex gap-4">
-                <Button
+              {/* ボタン */}
+              <div className="flex gap-4 pt-4">
+                <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1"
+                  className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? '作成中...' : '投稿を作成'}
-                </Button>
-                <Link href="/main/posts" className="flex-1">
-                  <Button type="button" variant="outline" className="w-full">
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      作成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      投稿を作成
+                    </>
+                  )}
+                </button>
+                <Link href="/main/all-posts" className="flex-1">
+                  <Button type="button" variant="outline" className="w-full h-full border-2 hover:bg-gray-50">
                     キャンセル
                   </Button>
                 </Link>

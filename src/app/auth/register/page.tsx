@@ -7,7 +7,7 @@ import { createBrowserClient } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { validateEmail, validatePassword } from '@/lib/utils';
+import { validateEmail, validatePassword } from '@/lib/validations';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -81,10 +81,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4">
+      <Card className="w-full max-w-md shadow-xl border-2 border-emerald-200">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">新規登録</CardTitle>
+          <div className="flex flex-col items-center justify-center mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center mb-3">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent text-center">
+              新規登録
+            </CardTitle>
+          </div>
           <CardDescription className="text-center">
             アカウントを作成して始めましょう
           </CardDescription>
@@ -109,6 +118,8 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                 maxLength={50}
                 required
+                disabled={loading}
+                className="focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
 
@@ -123,6 +134,8 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                disabled={loading}
+                className="focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
 
@@ -137,6 +150,8 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
+                disabled={loading}
+                className="focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
 
@@ -151,10 +166,12 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
+                disabled={loading}
+                className="focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-800">
+            <div className="bg-emerald-50 p-3 rounded-md text-sm text-emerald-800 border border-emerald-200">
               <p className="font-medium mb-1">⚠️ ご利用前に必ずご確認ください</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
                 <li>18歳以上の方のみご利用いただけます</li>
@@ -163,14 +180,18 @@ export default function RegisterPage() {
               </ul>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700" 
+              disabled={loading}
+            >
               {loading ? '登録中...' : '新規登録'}
             </Button>
           </form>
 
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">既にアカウントをお持ちの方は </span>
-            <Link href="/auth/login" className="text-primary hover:underline font-medium">
+            <Link href="/auth/login" className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium">
               ログイン
             </Link>
           </div>

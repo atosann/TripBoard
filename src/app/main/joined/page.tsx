@@ -1,8 +1,8 @@
 // src/app/main/joined/page.tsx
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
 export default async function JoinedPostsPage() {
   const cookieStore = await cookies()
@@ -31,157 +31,260 @@ export default async function JoinedPostsPage() {
     redirect('/login')
   }
 
-  // 参加中の投稿を取得
-  const { data: participants } = await supabase
-    .from('participants')
+  // 自分が参加しているチャットルームを取得
+  const { data: chatMembers } = await supabase
+    .from('chat_members')
+    .select('chat_room_id, joined_at')
+    .eq('user_id', user.id)
+    .order('joined_at', { ascending: false })
+
+  console.log('📋 参加中のチャットルーム:', chatMembers)
+
+  if (!chatMembers || chatMembers.length === 0) {
+    // 参加しているチャットがない場合
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="container mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold text-gray-900">参加中の投稿</h1>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
+              <svg className="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">まだ参加している投稿がありません</h2>
+              <p className="text-gray-600 mb-6">興味のある投稿に参加申請してみましょう！</p>
+              <Link
+                href="/main/all-posts"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                投稿を探す
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // チャットルームIDから投稿情報を取得
+  const chatRoomIds = chatMembers.map(cm => cm.chat_room_id)
+  
+  const { data: chatRooms } = await supabase
+    .from('chat_rooms')
+    .select('id, post_id')
+    .in('id', chatRoomIds)
+
+  console.log('🏠 チャットルーム情報:', chatRooms)
+
+  if (!chatRooms || chatRooms.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="container mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold text-gray-900">参加中の投稿</h1>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-16">
+            <p className="text-gray-600">データの読み込みに失敗しました</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  const postIds = chatRooms.map(cr => cr.post_id)
+  
+  // 投稿の詳細情報を取得
+  const { data: posts } = await supabase
+    .from('posts')
     .select(`
       *,
-      posts (
-        *,
-        profiles:user_id (
-          username,
-          avatar_url
-        )
+      author:user_id (
+        id,
+        username,
+        avatar_url
       )
     `)
-    .eq('user_id', user.id)
+    .in('id', postIds)
     .order('created_at', { ascending: false })
 
-  const posts = participants?.map(p => p.posts).filter(Boolean) || []
+  console.log('📝 投稿情報:', posts)
+
+  // チャットルームIDと投稿をマッピング
+  const postsWithChatRoom = (posts || []).map(post => {
+    const chatRoom = chatRooms.find(cr => cr.post_id === post.id)
+    const memberInfo = chatMembers.find(cm => cm.chat_room_id === chatRoom?.id)
+    return {
+      ...post,
+      chatRoomId: chatRoom?.id,
+      joinedAt: memberInfo?.joined_at
+    }
+  })
+
+  // 参加メンバー数を取得
+  const { data: allMembers } = await supabase
+    .from('chat_members')
+    .select('chat_room_id')
+    .in('chat_room_id', chatRoomIds)
+
+  const memberCounts = chatRoomIds.reduce((acc, roomId) => {
+    acc[roomId] = allMembers?.filter(m => m.chat_room_id === roomId).length || 0
+    return acc
+  }, {} as Record<string, number>)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-600">旅行掲示板</h1>
-          <div className="flex gap-4 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">参加中の投稿</h1>
             <Link
-              href="/main/posts/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+              href="/main/all-posts"
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
-              投稿を作成
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              他の投稿を探す
             </Link>
-            <form action="/auth/signout" method="post">
-              <button type="submit" className="text-gray-600 hover:text-gray-800">
-                ログアウト
-              </button>
-            </form>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto flex">
-        {/* サイドバー */}
-        <aside className="w-64 bg-white border-r min-h-screen sticky top-16 self-start">
-          <nav className="p-4">
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/main"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  トップページ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/my-posts"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  自分の投稿
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/joined"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 text-blue-600 font-medium"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  参加中の投稿
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/main/profile"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  プロフィール
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        {/* メインコンテンツ */}
-        <main className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold">参加中の投稿</h2>
-            <p className="text-gray-600 text-sm mt-1">
-              {posts?.length || 0}件の投稿
-            </p>
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* 統計情報 */}
+          <div className="mb-6 bg-white rounded-xl shadow-lg p-6 border-2 border-emerald-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">あなたが参加している投稿</p>
+                <p className="text-2xl font-bold text-gray-900">{postsWithChatRoom.length}件</p>
+              </div>
+            </div>
           </div>
 
+          {/* 投稿一覧 */}
           <div className="space-y-4">
-            {posts?.map((post: any) => (
-              <Link
+            {postsWithChatRoom.map((post) => (
+              <div
                 key={post.id}
-                href={`/main/posts/${post.id}`}
-                className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
+                className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-emerald-300"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 mb-3 line-clamp-2">
-                      {post.content}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-6">
+                  {/* ヘッダー部分 */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <Link
+                        href={`/main/posts/${post.id}`}
+                        className="text-xl font-bold text-gray-900 hover:text-emerald-600 transition-colors"
+                      >
+                        {post.title}
+                      </Link>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {post.joinedAt && new Date(post.joinedAt).toLocaleDateString('ja-JP', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}に参加
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-emerald-50 px-3 py-1 rounded-full">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      {post.chatRoomId ? memberCounts[post.chatRoomId] || 0 : 0}人
+                    </div>
+                  </div>
+
+                  {/* 投稿者情報 */}
+                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold">
+                      {post.author?.avatar_url ? (
+                        <img src={post.author.avatar_url} alt={post.author.username} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        post.author?.username?.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{post.author?.username}</p>
+                      <p className="text-xs text-gray-500">主催者</p>
+                    </div>
+                  </div>
+
+                  {/* 詳細情報 */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {post.destination && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        {post.prefecture}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="text-gray-700">{post.destination}</span>
+                      </div>
+                    )}
+                    {post.travel_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        {new Date(post.start_date).toLocaleDateString('ja-JP')}
-                      </span>
-                      <span className="flex items-center gap-1">
+                        <span className="text-gray-700">
+                          {new Date(post.travel_date).toLocaleDateString('ja-JP', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 説明文 */}
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {post.content || post.description || '説明なし'}
+                  </p>
+
+                  {/* アクションボタン */}
+                  <div className="flex gap-3">
+                    {post.chatRoomId && (
+                      <Link
+                        href={`/main/chats/${post.chatRoomId}`}
+                        className="flex-1 text-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
-                        {post.profiles?.username || 'Unknown'}
-                      </span>
-                    </div>
+                        チャット
+                      </Link>
+                    )}
+                    <Link
+                      href={`/main/posts/${post.id}`}
+                      className="flex-1 text-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      詳細
+                    </Link>
                   </div>
                 </div>
-              </Link>
-            ))}
-
-            {!posts || posts.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                参加中の投稿がありません
               </div>
-            ) : null}
+            ))}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

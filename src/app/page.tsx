@@ -28,7 +28,7 @@ export default async function TopPage() {
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
 
   // 統計情報を取得
