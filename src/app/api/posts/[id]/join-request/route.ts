@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = cookies()
@@ -21,7 +21,7 @@ export async function POST(
     }
 
     const { message } = await request.json()
-    const postId = params.id
+    const { id: postId } = await params
 
     // 投稿の存在確認
     const { data: post, error: postError } = await supabase
