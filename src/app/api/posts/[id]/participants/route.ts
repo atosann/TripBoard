@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string; participantId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = cookies()
@@ -20,9 +20,8 @@ export async function PATCH(
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
     }
 
-    const { action } = await request.json() // 'approve' or 'reject'
-    const postId = params.id
-    const participantId = params.participantId
+    const { action, participantId } = await request.json() // participantIdをリクエストボディから取得
+    const { id: postId } = await params
 
     // 投稿の所有者確認
     const { data: post, error: postError } = await supabase
