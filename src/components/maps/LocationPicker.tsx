@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { MapPin } from 'lucide-react';
+import { useMapEvents } from 'react-leaflet';
 
-// Leafletは動的インポートが必要（SSR回避）
+// Leafletは動的インポートが必要(SSR回避)
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
   { ssr: false }
@@ -15,10 +16,6 @@ const TileLayer = dynamic(
 );
 const Marker = dynamic(
   () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-const useMapEvents = dynamic(
-  () => import('react-leaflet').then((mod) => mod.useMapEvents),
   { ssr: false }
 );
 
@@ -51,7 +48,7 @@ export function LocationPicker({ onLocationSelect, initialLat = 35.6812, initial
   }, []);
 
   const handleLocationSelect = async (lat: number, lng: number) => {
-    // 簡易的な住所取得（実際はNominatim APIなどを使用）
+    // 簡易的な住所取得(実際はNominatim APIなどを使用)
     setAddress(`緯度: ${lat.toFixed(6)}, 経度: ${lng.toFixed(6)}`);
     onLocationSelect(lat, lng, address);
   };
