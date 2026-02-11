@@ -74,7 +74,7 @@ export default function RegisterPage() {
     try {
       const supabase = createBrowserClient();
       
-      // ユーザー登録
+      // ユーザー登録（メール確認なし）
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -82,6 +82,7 @@ export default function RegisterPage() {
           data: {
             display_name: formData.displayName,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -95,27 +96,38 @@ export default function RegisterPage() {
         return;
       }
 
-      // プロフィール情報を更新
+      // プロフィール情報を更新（upsertに変更）
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: authData.user.id,
             display_name: formData.displayName,
             age_range: formData.ageRange,
             gender: formData.gender,
             bio: formData.bio || null,
-          })
-          .eq('id', authData.user.id);
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'id'
+          });
 
         if (profileError) {
           console.error('プロフィール更新エラー:', profileError);
         }
       }
 
-      // 登録成功
-      alert('登録が完了しました！ログインページに移動します。');
-      router.push('/auth/login');
+      // メール確認が必要かチェック
+      if (authData.user && !authData.session) {
+        // メール確認が必要
+        alert('確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。');
+        router.push('/auth/login');
+      } else {
+        // メール確認不要（すぐにログイン可能）
+        alert('登録が完了しました！');
+        router.push('/main');
+      }
     } catch (err) {
+      console.error('登録エラー:', err);
       setError('登録処理中にエラーが発生しました');
       setLoading(false);
     }
