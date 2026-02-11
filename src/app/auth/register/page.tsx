@@ -74,6 +74,9 @@ export default function RegisterPage() {
     try {
       const supabase = createBrowserClient();
       
+      console.log('=== 登録開始 ===');
+      console.log('Email:', formData.email);
+      
       // ユーザー登録（メール確認なし）
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -86,7 +89,16 @@ export default function RegisterPage() {
         },
       });
 
+      console.log('=== サインアップ結果 ===');
+      console.log('authData:', authData);
+      console.log('signUpError:', signUpError);
+
       if (signUpError) {
+        console.error('=== サインアップエラー詳細 ===');
+        console.error('Message:', signUpError.message);
+        console.error('Status:', signUpError.status);
+        console.error('Full error:', JSON.stringify(signUpError, null, 2));
+        
         if (signUpError.message.includes('already registered')) {
           setError('このメールアドレスは既に登録されています');
         } else {
@@ -98,21 +110,32 @@ export default function RegisterPage() {
 
       // プロフィール情報を更新（upsertに変更）
       if (authData.user) {
-        const { error: profileError } = await supabase
+        console.log('=== プロフィール登録開始 ===');
+        console.log('User ID:', authData.user.id);
+        
+        const profileData = {
+          id: authData.user.id,
+          display_name: formData.displayName,
+          age_range: formData.ageRange,
+          gender: formData.gender,
+          bio: formData.bio || null,
+          updated_at: new Date().toISOString(),
+        };
+        
+        console.log('Profile data:', profileData);
+        
+        const { data: profileResult, error: profileError } = await supabase
           .from('profiles')
-          .upsert({
-            id: authData.user.id,
-            display_name: formData.displayName,
-            age_range: formData.ageRange,
-            gender: formData.gender,
-            bio: formData.bio || null,
-            updated_at: new Date().toISOString(),
-          }, {
+          .upsert(profileData, {
             onConflict: 'id'
           });
 
+        console.log('=== プロフィール登録結果 ===');
+        console.log('profileResult:', profileResult);
+        console.log('profileError:', profileError);
+
         if (profileError) {
-          console.error('プロフィール更新エラー:', profileError);
+          console.error('プロフィール更新エラー:', JSON.stringify(profileError, null, 2));
         }
       }
 
@@ -127,7 +150,10 @@ export default function RegisterPage() {
         router.push('/main');
       }
     } catch (err) {
-      console.error('登録エラー:', err);
+      console.error('=== キャッチされたエラー ===');
+      console.error('Error:', err);
+      console.error('Error type:', typeof err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
       setError('登録処理中にエラーが発生しました');
       setLoading(false);
     }
@@ -220,6 +246,7 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  autoComplete="new-password"
                   className="focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
@@ -235,6 +262,7 @@ export default function RegisterPage() {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
+                  autoComplete="new-password"
                   className="focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
