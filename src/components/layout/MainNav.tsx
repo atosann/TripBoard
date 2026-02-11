@@ -40,7 +40,7 @@ export function MainNav() {
       icon: PlusCircle 
     },
     { 
-      href: '/main/profile', 
+      href: '/main/profile/[id]', 
       label: 'プロフィール', 
       icon: User 
     },

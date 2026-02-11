@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { MobileNav } from '../../../components/MobileNav'
 
 export default async function AllPostsPage() {
   const cookieStore = await cookies()
@@ -40,8 +41,11 @@ export default async function AllPostsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      {/* ハンバーガーメニュー */}
+      <MobileNav />
+      
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 pl-16 sm:pl-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">全ての投稿</h1>
             <Link

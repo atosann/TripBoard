@@ -11,20 +11,25 @@ import { validateEmail, validatePassword } from '@/lib/validations';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [step, setStep] = useState(1); // 1: アカウント情報, 2: プロフィール情報
   const [formData, setFormData] = useState({
+    // アカウント情報
     email: '',
     password: '',
     confirmPassword: '',
     displayName: '',
+    // プロフィール情報
+    ageRange: '',
+    gender: '',
+    bio: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNext = () => {
     setError('');
 
-    // バリデーション
+    // ステップ1のバリデーション
     if (!validateEmail(formData.email)) {
       setError('有効なメールアドレスを入力してください');
       return;
@@ -46,12 +51,31 @@ export default function RegisterPage() {
       return;
     }
 
+    setStep(2);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // ステップ2のバリデーション
+    if (!formData.ageRange) {
+      setError('年齢層を選択してください');
+      return;
+    }
+
+    if (!formData.gender) {
+      setError('性別を選択してください');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const supabase = createBrowserClient();
       
-      const { error: signUpError } = await supabase.auth.signUp({
+      // ユーザー登録
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -69,6 +93,23 @@ export default function RegisterPage() {
         }
         setLoading(false);
         return;
+      }
+
+      // プロフィール情報を更新
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            display_name: formData.displayName,
+            age_range: formData.ageRange,
+            gender: formData.gender,
+            bio: formData.bio || null,
+          })
+          .eq('id', authData.user.id);
+
+        if (profileError) {
+          console.error('プロフィール更新エラー:', profileError);
+        }
       }
 
       // 登録成功
@@ -95,99 +136,200 @@ export default function RegisterPage() {
             </CardTitle>
           </div>
           <CardDescription className="text-center">
-            アカウントを作成して始めましょう
+            {step === 1 ? 'アカウント情報を入力' : 'プロフィール情報を入力'}
           </CardDescription>
+          
+          {/* ステップインジケーター */}
+          <div className="flex items-center justify-center gap-2 pt-4">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              step === 1 ? 'bg-emerald-500 text-white' : 'bg-emerald-200 text-emerald-700'
+            }`}>
+              1
+            </div>
+            <div className="w-12 h-0.5 bg-emerald-200"></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              step === 2 ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'
+            }`}>
+              2
+            </div>
+          </div>
         </CardHeader>
+        
         <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm mb-4">
+              {error}
+            </div>
+          )}
+
+          {/* ステップ1: アカウント情報 */}
+          {step === 1 && (
+            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="displayName" className="text-sm font-medium">
+                  表示名 <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  placeholder="山田太郎"
+                  value={formData.displayName}
+                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                  maxLength={50}
+                  required
+                  className="focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <p className="text-xs text-gray-500">※後から変更できません</p>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <label htmlFor="displayName" className="text-sm font-medium">
-                表示名 <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="displayName"
-                type="text"
-                placeholder="山田太郎"
-                value={formData.displayName}
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                maxLength={50}
-                required
-                disabled={loading}
-                className="focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  メールアドレス <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="example@email.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  className="focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                メールアドレス <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="example@email.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                disabled={loading}
-                className="focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  パスワード <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="8文字以上"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  className="focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                パスワード <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="8文字以上"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                disabled={loading}
-                className="focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium">
+                  パスワード（確認） <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="もう一度入力"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                  className="focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
-                パスワード（確認） <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="もう一度入力"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                required
-                disabled={loading}
-                className="focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+              >
+                次へ
+              </Button>
+            </form>
+          )}
 
-            <div className="bg-emerald-50 p-3 rounded-md text-sm text-emerald-800 border border-emerald-200">
-              <p className="font-medium mb-1">⚠️ ご利用前に必ずご確認ください</p>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>18歳以上の方のみご利用いただけます</li>
-                <li>実際の集合は公共の場で行ってください</li>
-                <li>個人情報は絶対に公開しないでください</li>
-              </ul>
-            </div>
+          {/* ステップ2: プロフィール情報 */}
+          {step === 2 && (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="ageRange" className="text-sm font-medium">
+                  年齢層 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="ageRange"
+                  value={formData.ageRange}
+                  onChange={(e) => setFormData({ ...formData, ageRange: e.target.value })}
+                  required
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">選択してください</option>
+                  <option value="18-24歳">18-24歳</option>
+                  <option value="25-29歳">25-29歳</option>
+                  <option value="30-34歳">30-34歳</option>
+                  <option value="35-39歳">35-39歳</option>
+                  <option value="40-44歳">40-44歳</option>
+                  <option value="45-49歳">45-49歳</option>
+                  <option value="50歳以上">50歳以上</option>
+                </select>
+                <p className="text-xs text-gray-500">※後から変更できません</p>
+              </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700" 
-              disabled={loading}
-            >
-              {loading ? '登録中...' : '新規登録'}
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <label htmlFor="gender" className="text-sm font-medium">
+                  性別 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="gender"
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  required
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">選択してください</option>
+                  <option value="男性">男性</option>
+                  <option value="女性">女性</option>
+                  <option value="その他">その他</option>
+                  <option value="回答しない">回答しない</option>
+                </select>
+                <p className="text-xs text-gray-500">※後から変更できません</p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="bio" className="text-sm font-medium">
+                  自己紹介 <span className="text-gray-400">(任意)</span>
+                </label>
+                <textarea
+                  id="bio"
+                  placeholder="旅行の好みや趣味などを自由に書いてください"
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  maxLength={500}
+                  rows={4}
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <p className="text-xs text-gray-500">{formData.bio.length}/500文字（後から編集可能）</p>
+              </div>
+
+              <div className="bg-emerald-50 p-3 rounded-md text-sm text-emerald-800 border border-emerald-200">
+                <p className="font-medium mb-1">⚠️ ご利用前に必ずご確認ください</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>18歳以上の方のみご利用いただけます</li>
+                  <li>実際の集合は公共の場で行ってください</li>
+                  <li>個人情報は絶対に公開しないでください</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  type="button"
+                  onClick={() => setStep(1)}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  戻る
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700" 
+                  disabled={loading}
+                >
+                  {loading ? '登録中...' : '登録完了'}
+                </Button>
+              </div>
+            </form>
+          )}
 
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">既にアカウントをお持ちの方は </span>
