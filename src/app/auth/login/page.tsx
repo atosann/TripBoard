@@ -88,22 +88,22 @@ export default function LoginPage() {
       if (data?.session) {
         console.log('ログイン成功:', data.user?.email);
         
-        // usersテーブルのデータを確認
+        // profilesテーブルのデータを確認
         const { data: userData, error: userError } = await supabase
-          .from('users')
+          .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .single();
 
         if (userError) {
-          console.error('Users table error:', userError);
+          console.error('Profiles table error:', userError);
           setError('ユーザー情報の取得に失敗しました。管理者に連絡してください。');
           setLoading(false);
           return;
         }
 
         if (!userData) {
-          console.error('User not found in users table');
+          console.error('User not found in profiles table');
           setError('ユーザー情報が見つかりません。新規登録からやり直してください。');
           setLoading(false);
           return;
