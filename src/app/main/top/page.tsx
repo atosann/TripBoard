@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 
-export default function MainPage() {
+export default function TopPage() {
   // 投稿例のデータ
   const examplePosts = [
     {
@@ -127,47 +126,6 @@ export default function MainPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-      {/* ヒーローセクション */}
-      <header className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative container mx-auto px-4 py-20 text-center">
-          <div className="mb-6 flex justify-center">
-            <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-white/30">
-              <span className="text-3xl">👥</span>
-              <span className="text-xl font-bold">メンバー募集掲示板</span>
-            </div>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 drop-shadow-lg">
-            一緒に楽しもう！
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-emerald-50 max-w-3xl mx-auto leading-relaxed">
-            カラオケ、登山、飲み会、スポーツ...<br />
-            あなたの「やりたい！」を仲間と一緒に実現しよう
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/auth/signup">
-              <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-full shadow-2xl hover:shadow-3xl transition-all font-bold">
-                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                無料で始める
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white/20 text-lg px-8 py-6 rounded-full font-bold">
-                ログイン
-              </Button>
-            </Link>
-          </div>
-        </div>
-        {/* 装飾的な波 */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" fillOpacity="0.1"/>
-          </svg>
-        </div>
-      </header>
-
       {/* 特徴セクション */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -291,65 +249,6 @@ export default function MainPage() {
           </div>
         </div>
       </section>
-
-      {/* CTAセクション */}
-      <section className="py-20 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            今すぐ始めよう！
-          </h2>
-          <p className="text-xl mb-8 text-emerald-50">
-            無料で登録して、あなたも仲間を見つけませんか？
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup">
-              <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 text-lg px-10 py-6 rounded-full shadow-2xl font-bold">
-                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                新規登録（無料）
-              </Button>
-            </Link>
-            <Link href="/main/all-posts">
-              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white/20 text-lg px-10 py-6 rounded-full font-bold">
-                投稿を見る
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* フッター */}
-      <footer className="bg-gray-900 text-gray-300 py-12 px-4">
-        <div className="container mx-auto max-w-6xl text-center">
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-2 text-2xl font-bold text-white mb-4">
-              <span>👥</span>
-              <span>メンバー募集掲示板</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-400 mb-6">
-            一緒に楽しもう！カラオケ、登山、飲み会、スポーツなど、様々なメンバー募集が集まる場所
-          </p>
-          <div className="flex justify-center gap-8 text-sm">
-            <Link href="/about" className="hover:text-white transition-colors">
-              サービスについて
-            </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
-              利用規約
-            </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">
-              プライバシーポリシー
-            </Link>
-            <Link href="/contact" className="hover:text-white transition-colors">
-              お問い合わせ
-            </Link>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-sm text-gray-500">
-            © 2026 メンバー募集掲示板. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

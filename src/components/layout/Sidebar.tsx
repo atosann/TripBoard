@@ -2,14 +2,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createBrowserClient } from '@/lib/supabase-client';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const navItems = [
     {
-      href: '/main',
+      href: '/main/top',
       label: 'トップページ',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,6 +66,19 @@ export function Sidebar() {
     },
   ];
 
+  const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    
+    const supabase = createBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      router.push('/auth/register');
+    } else {
+      router.push(href);
+    }
+  };
+
   return (
     <aside className="w-64 bg-white border-r min-h-screen sticky top-16 self-start">
       <nav className="p-4">
@@ -74,6 +89,7 @@ export function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-emerald-50 text-emerald-600 font-medium'

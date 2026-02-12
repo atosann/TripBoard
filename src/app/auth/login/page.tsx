@@ -112,7 +112,7 @@ export default function LoginPage() {
         console.log('User data found:', userData);
         
         // ログイン成功 - リダイレクト
-        router.push('/main');
+        router.push('/main/top');
         router.refresh();
       } else {
         setError('ログインに失敗しました（セッションが作成されませんでした）');
