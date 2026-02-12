@@ -73,7 +73,7 @@ export function Sidebar() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      router.push('/auth/register');
+      router.push('/auth/login');
     } else {
       router.push(href);
     }
