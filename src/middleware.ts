@@ -1,8 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// 関数名を middleware から proxy に変更
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -55,21 +54,15 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // セッションチェック（軽量）
   const { data: { session } } = await supabase.auth.getSession()
 
-  // 認証が必要なパス
   const isProtectedPath = request.nextUrl.pathname.startsWith('/main')
-  
-  // 認証ページへのアクセス
   const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
 
-  // 未ログインで保護されたページにアクセス
   if (isProtectedPath && !session) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // ログイン済みで認証ページにアクセス
   if (isAuthPath && session) {
     return NextResponse.redirect(new URL('/main/posts', request.url))
   }
