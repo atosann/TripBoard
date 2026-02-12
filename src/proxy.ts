@@ -58,6 +58,11 @@ export async function proxy(request: NextRequest) {
 
   const isProtectedPath = request.nextUrl.pathname.startsWith('/main')
   const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
+  const isRootPath = request.nextUrl.pathname === '/'
+
+  if (isRootPath) {
+    return NextResponse.redirect(new URL('/main', request.url))
+  }
 
   if (isProtectedPath && !session) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
@@ -71,5 +76,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/main/:path*', '/auth/:path*'],
+  matcher: ['/main/:path*', '/auth/:path*', '/'],
 }
