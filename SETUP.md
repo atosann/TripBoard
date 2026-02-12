@@ -89,7 +89,7 @@ trip-board/
 │   │   │   └── profile/        # プロフィール
 │   │   ├── layout.tsx          # ルートレイアウト
 │   │   ├── page.tsx            # ホームページ
-│   │   └── globals.css         # グローバルスタイル
+│   │   └──          # グローバルスタイル
 │   ├── components/             # Reactコンポーネント
 │   │   ├── ui/                 # 基本UIコンポーネント
 │   │   ├── auth/               # 認証関連
