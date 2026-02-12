@@ -56,7 +56,8 @@ export async function proxy(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  const isProtectedPath = request.nextUrl.pathname.startsWith('/main')
+  const isProtectedPath = request.nextUrl.pathname.startsWith('/main') &&
+                          request.nextUrl.pathname !== '/main'
   const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
   const isRootPath = request.nextUrl.pathname === '/'
 
