@@ -1,10 +1,11 @@
-/* Leaflet CSS */
-@import 'leaflet/dist/leaflet.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
 
 @layer base {
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
