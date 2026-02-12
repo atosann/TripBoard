@@ -2,25 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@/lib/supabase-client';
-import { useState } from 'react';
 
 export function Header() {
-  const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      const supabase = createBrowserClient();
-      await supabase.auth.signOut();
-      router.push('/auth/login');
-      router.refresh();
-    } catch (error) {
-      console.error('ログアウトエラー:', error);
-    }
-  };
-
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 md:py-4">
@@ -38,62 +21,16 @@ export function Header() {
             </h1>
           </Link>
 
-          {/* デスクトップメニュー */}
-          <div className="hidden md:flex gap-4 items-center">
+          {/* メニュー */}
+          <div className="flex gap-4 items-center">
             <Link
               href="/main/posts/create"
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 text-sm md:text-base"
             >
               投稿を作成
             </Link>
-            <button
-              onClick={handleLogout}
-              type="button"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              ログアウト
-            </button>
           </div>
-
-          {/* ハンバーガーメニューボタン (モバイル) */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            type="button"
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="メニュー"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
         </div>
-
-        {/* モバイルメニュー */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-2 border-t border-gray-100 pt-4 space-y-3">
-            <Link
-              href="/main/posts/create"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-3 rounded-lg font-semibold shadow-md text-center"
-            >
-              投稿を作成
-            </Link>
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                handleLogout();
-              }}
-              type="button"
-              className="block w-full text-gray-600 hover:text-gray-900 px-4 py-2 text-left transition-colors"
-            >
-              ログアウト
-            </button>
-          </div>
-        )}
       </div>
     </header>
   );
