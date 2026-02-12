@@ -5,9 +5,9 @@ import Link from 'next/link';
 
 export function Header() {
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3 md:py-4">
-        <div className="flex justify-between items-center">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 h-16">
+      <div className="container mx-auto px-4 h-full">
+        <div className="flex justify-between items-center h-full">
           {/* ロゴ */}
           <Link href="/main" className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
