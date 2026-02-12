@@ -80,7 +80,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white border-r min-h-screen sticky top-16 self-start">
+    <aside className="w-64 bg-white border-r min-h-screen sticky top-20 self-start">
       <nav className="p-4">
         <ul className="space-y-2">
           {navItems.map((item) => {
