@@ -77,13 +77,16 @@ export default function RegisterPage() {
       console.log('=== 登録開始 ===');
       console.log('Email:', formData.email);
       
-      // ユーザー登録（メール確認なし）
+      // まずユーザー登録のみ実行（プロフィールは後で）
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             display_name: formData.displayName,
+            age_range: formData.ageRange,
+            gender: formData.gender,
+            bio: formData.bio || null,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -108,52 +111,17 @@ export default function RegisterPage() {
         return;
       }
 
-      // プロフィール情報を更新（upsertに変更）
+      // 登録成功（メール確認待ち）
       if (authData.user) {
-        console.log('=== プロフィール登録開始 ===');
-        console.log('User ID:', authData.user.id);
-        
-        const profileData = {
-          id: authData.user.id,
-          display_name: formData.displayName,
-          age_range: formData.ageRange,
-          gender: formData.gender,
-          bio: formData.bio || null,
-          updated_at: new Date().toISOString(),
-        };
-        
-        console.log('Profile data:', profileData);
-        
-        const { data: profileResult, error: profileError } = await supabase
-          .from('profiles')
-          .upsert(profileData, {
-            onConflict: 'id'
-          });
-
-        console.log('=== プロフィール登録結果 ===');
-        console.log('profileResult:', profileResult);
-        console.log('profileError:', profileError);
-
-        if (profileError) {
-          console.error('プロフィール更新エラー:', JSON.stringify(profileError, null, 2));
-        }
-      }
-
-      // メール確認が必要かチェック
-      if (authData.user && !authData.session) {
-        // メール確認が必要
-        alert('確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。');
+        alert('確認メールを送信しました。\n\nメール内のリンクをクリックして登録を完了してください。\n\n※メールが届かない場合は、迷惑メールフォルダもご確認ください。');
         router.push('/auth/login');
       } else {
-        // メール確認不要（すぐにログイン可能）
-        alert('登録が完了しました！');
-        router.push('/main');
+        setError('登録処理中にエラーが発生しました');
+        setLoading(false);
       }
     } catch (err) {
       console.error('=== キャッチされたエラー ===');
       console.error('Error:', err);
-      console.error('Error type:', typeof err);
-      console.error('Error details:', JSON.stringify(err, null, 2));
       setError('登録処理中にエラーが発生しました');
       setLoading(false);
     }
@@ -231,6 +199,7 @@ export default function RegisterPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  autoComplete="email"
                   className="focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
