@@ -73,7 +73,7 @@ export function Sidebar() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      router.push('/auth/login');
+      window.location.href = '/auth/login';
     } else {
       router.push(href);
     }
@@ -88,7 +88,7 @@ export function Sidebar() {
     if (user) {
       router.push('/main/posts');
     } else {
-      router.push('/auth/login');
+      window.location.href = '/auth/login';
     }
   };
 
@@ -97,7 +97,7 @@ export function Sidebar() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push('/auth/login');
+      window.location.href = '/auth/login';
       return;
     }
 
