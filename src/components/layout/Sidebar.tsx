@@ -68,27 +68,19 @@ export function Sidebar() {
 
   const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
-    
+
     const supabase = createBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       window.location.href = '/auth/login';
-    } else {
-      router.push(href);
+      return;
     }
-  };
 
-  const handleTopClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-
-    const supabase = createBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user) {
-      router.push('/main/posts');
+    if (href === '/main/top') {
+      window.location.href = '/main/posts';
     } else {
-      window.location.href = '/auth/login';
+      window.location.href = href;
     }
   };
 
@@ -111,12 +103,11 @@ export function Sidebar() {
         <ul className="space-y-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
-            const isTop = item.href === '/main/top';
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  onClick={(e) => isTop ? handleTopClick(e) : handleNavClick(e, item.href)}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-emerald-50 text-emerald-600 font-medium'
