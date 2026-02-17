@@ -23,17 +23,15 @@ export default function HomePage() {
   const [popularPosts, setPopularPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
-  // 最新の投稿を取得
   const fetchRecentPosts = async () => {
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        router.push('/auth/login')
+        window.location.href = '/auth/login'
         return
       }
 
-      // 最新6件の投稿を取得
       const { data, error } = await supabase
         .from('posts')
         .select('*')
@@ -45,7 +43,6 @@ export default function HomePage() {
         setRecentPosts([])
       } else {
         setRecentPosts(data || [])
-        // 人気投稿として最初の3件を使用（後で応募数などでソートできます）
         setPopularPosts(data?.slice(0, 3) || [])
       }
     } catch (error) {
