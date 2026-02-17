@@ -73,11 +73,11 @@ export function Sidebar() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      window.location.href = '/auth/login';
+      router.push('/auth/login');
       return;
     }
 
-    window.location.href = href;
+    router.push(href);
   };
 
   const handleLogout = async () => {
@@ -85,12 +85,12 @@ export function Sidebar() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      window.location.href = '/auth/login';
+      router.push('/auth/login');
       return;
     }
 
     await supabase.auth.signOut({ scope: 'local' });
-    window.location.href = '/main';
+    router.push('/main');
   };
 
   return (
