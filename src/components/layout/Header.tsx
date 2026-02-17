@@ -7,7 +7,7 @@ export function Header() {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 h-16">
       <div className="container mx-auto px-4 h-full">
-        <div className="flex justify-between items-center h-full">
+        <div className="grid grid-cols-3 items-center h-full">
           {/* ロゴ */}
           <Link href="/main" className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -15,14 +15,16 @@ export function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h1 className="text-base md:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              <span className="hidden sm:inline">みんなのメンバー募集掲示板</span>
-              <span className="sm:hidden">メンバー募集</span>
-            </h1>
           </Link>
 
+          {/* タイトル（中央） */}
+          <h1 className="text-base md:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent text-center">
+            <span className="hidden sm:inline">みんなのメンバー募集掲示板</span>
+            <span className="sm:hidden">メンバー募集</span>
+          </h1>
+
           {/* メニュー */}
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center justify-end">
             <Link
               href="/main/posts/create"
               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 text-sm md:text-base"
