@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, use } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
@@ -14,7 +14,8 @@ interface Message {
   }
 }
 
-export default function GroupChatPage({ params }: { params: { id: string } }) {
+export default function GroupChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -34,7 +35,7 @@ export default function GroupChatPage({ params }: { params: { id: string } }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     scrollToBottom()
@@ -57,13 +58,13 @@ export default function GroupChatPage({ params }: { params: { id: string } }) {
     const { data: memberData } = await supabase
       .from('group_members')
       .select('*')
-      .eq('post_id', params.id)
+      .eq('post_id', id)
       .eq('user_id', user.id)
       .single()
 
     if (!memberData) {
       alert('このチャットにアクセスする権限がありません')
-      router.push(`/main/posts/${params.id}`)
+      router.push(`/main/posts/${id}`)
       return
     }
 
@@ -80,7 +81,7 @@ export default function GroupChatPage({ params }: { params: { id: string } }) {
           username
         )
       `)
-      .eq('post_id', params.id)
+      .eq('post_id', id)
       .order('created_at', { ascending: true })
 
     if (!error && data) {
@@ -90,14 +91,14 @@ export default function GroupChatPage({ params }: { params: { id: string } }) {
 
   const subscribeToMessages = () => {
     const channel = supabase
-      .channel(`group_messages:${params.id}`)
+      .channel(`group_messages:${id}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'group_messages',
-          filter: `post_id=eq.${params.id}`
+          filter: `post_id=eq.${id}`
         },
         async (payload) => {
           const { data } = await supabase
@@ -130,7 +131,7 @@ export default function GroupChatPage({ params }: { params: { id: string } }) {
       const { error } = await supabase
         .from('group_messages')
         .insert({
-          post_id: params.id,
+          post_id: id,
           user_id: currentUser.id,
           message: newMessage.trim()
         })
@@ -156,7 +157,7 @@ export default function GroupChatPage({ params }: { params: { id: string } }) {
       {/* ヘッダー */}
       <div className="bg-white border-b p-4">
         <button
-          onClick={() => router.push(`/main/posts/${params.id}`)}
+          onClick={() => router.push(`/main/posts/${id}`)}
           className="text-blue-600 hover:underline mb-2"
         >
           ← 投稿に戻る
