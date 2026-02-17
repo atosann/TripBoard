@@ -77,11 +77,7 @@ export function Sidebar() {
       return;
     }
 
-    if (href === '/main/top') {
-      window.location.href = '/main/posts';
-    } else {
-      window.location.href = href;
-    }
+    window.location.href = href;
   };
 
   const handleLogout = async () => {
