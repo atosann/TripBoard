@@ -81,8 +81,9 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     const supabase = createBrowserClient();
-    await supabase.auth.signOut();
-    router.push('/main');
+    await supabase.auth.signOut({ scope: 'local' });
+    await supabase.auth.getSession(); // セッションクリアを待つ
+    window.location.href = '/main';
   };
 
   return (
