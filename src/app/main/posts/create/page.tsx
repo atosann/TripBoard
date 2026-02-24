@@ -371,7 +371,7 @@ export default function CreatePostPage() {
                     paddingRight: '2.5rem'
                   }}
                 >
-                  <option value="">選択してください（任意）</option>
+                  <option value="">---</option>
                   <option value="無料">無料</option>
                   <option value="割り勘">割り勘</option>
                   <option value="金額目安あり">金額目安あり</option>
@@ -407,7 +407,7 @@ export default function CreatePostPage() {
                     paddingRight: '2.5rem'
                   }}
                 >
-                  <option value="">不問（任意）</option>
+                  <option value="">---</option>
                   <option value="18-24歳歓迎">18-24歳歓迎</option>
                   <option value="20代歓迎">20代歓迎</option>
                   <option value="30代歓迎">30代歓迎</option>
@@ -438,7 +438,7 @@ export default function CreatePostPage() {
                     paddingRight: '2.5rem'
                   }}
                 >
-                  <option value="">不問（任意）</option>
+                  <option value="">---</option>
                   <option value="男女不問">男女不問</option>
                   <option value="女性限定">女性限定</option>
                   <option value="男性限定">男性限定</option>
