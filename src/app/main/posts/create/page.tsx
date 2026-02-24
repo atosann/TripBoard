@@ -313,12 +313,12 @@ export default function CreatePostPage() {
                   開催日時 *
                 </label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   required
                   value={formData.travel_date}
                   onChange={(e) => setFormData({ ...formData, travel_date: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                  min={new Date().toISOString().slice(0, 16)}
+                  min={new Date().toISOString().slice(0, 10)}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   ※ 過去の日時は選択できません
