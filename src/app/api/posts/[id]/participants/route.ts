@@ -20,7 +20,7 @@ export async function PATCH(
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
     }
 
-    const { action, participantId } = await request.json() // participantIdをリクエストボディから取得
+    const { action, participantId } = await request.json()
     const { id: postId } = await params
 
     // 投稿の所有者確認
@@ -74,16 +74,16 @@ export async function PATCH(
     if (action === 'approve') {
       const { data: approvedUser } = await supabase
         .from('profiles')
-        .select('username')
+        .select('display_name')
         .eq('id', participant.user_id)
         .single()
 
-      const username = approvedUser?.username || 'ユーザー'
+      const displayName = approvedUser?.display_name || 'ユーザー'
 
       await supabase.from('messages').insert({
         post_id: postId,
         user_id: user.id,
-        content: `${username}さんが参加しました`,
+        content: `${displayName}さんが参加しました`,
         is_system: true,
       })
     }
