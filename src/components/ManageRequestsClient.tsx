@@ -14,7 +14,7 @@ interface Request {
   created_at: string
   profile?: {
     id: string
-    username: string
+    displayname: string
     avatar_url?: string
     bio?: string
   }
@@ -267,16 +267,16 @@ export function ManageRequestsClient({
               {request.profile?.avatar_url ? (
                 <img 
                   src={request.profile.avatar_url} 
-                  alt={request.profile.username}
+                  alt={request.profile.displayname}
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                request.profile?.username?.charAt(0).toUpperCase() || '?'
+                request.profile?.displayname?.charAt(0).toUpperCase() || '?'
               )}
             </div>
             <div className="flex-1">
               <div className="font-bold text-lg text-gray-900">
-                {request.profile?.username || 'ユーザー名なし'}
+                {request.profile?.displayname || 'ユーザー名なし'}
               </div>
               <div className="text-sm text-gray-500 flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
