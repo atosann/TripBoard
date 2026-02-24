@@ -55,7 +55,6 @@ export function ChatInterface({
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // 自動スクロール
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -64,7 +63,6 @@ export function ChatInterface({
     scrollToBottom()
   }, [messages])
 
-  // リアルタイム購読
   useEffect(() => {
     console.log('🔌 Realtime購読開始:', chatRoomId)
     
@@ -81,7 +79,6 @@ export function ChatInterface({
         async (payload) => {
           console.log('🔔 新しいメッセージ受信:', payload)
           
-          // プロフィール情報を取得
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, username, display_name, avatar_url')
@@ -106,7 +103,6 @@ export function ChatInterface({
 
           console.log('✅ メッセージ追加:', newMsg)
           setMessages((prev) => {
-            // 重複チェック
             if (prev.some(m => m.id === newMsg.id)) {
               console.log('⚠️ 重複メッセージをスキップ')
               return prev
@@ -162,7 +158,6 @@ export function ChatInterface({
 
       console.log('✅ メッセージ送信成功:', data)
       
-      // 送信したメッセージを即座に表示
       const newMsg: Message = {
         id: data.id,
         chat_room_id: data.chat_room_id,
@@ -173,7 +168,6 @@ export function ChatInterface({
       }
       
       setMessages((prev) => {
-        // 重複チェック
         if (prev.some(m => m.id === newMsg.id)) {
           return prev
         }
@@ -197,200 +191,160 @@ export function ChatInterface({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 flex flex-col h-[calc(100vh-200px)]">
-      {/* メンバーリスト（サイドバー） */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* メッセージエリア */}
-        <div className="flex-1 flex flex-col">
-          {/* メッセージ一覧 */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center py-12">
-                <svg
-                  className="w-16 h-16 mx-auto text-gray-300 mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
+    <div className="flex h-[calc(100vh-220px)] bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+      {/* メッセージエリア */}
+      <div className="flex-1 flex flex-col">
+        {/* メッセージ一覧 */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3" style={{ backgroundColor: '#f0f4f8' }}>
+          {messages.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <p className="text-gray-500">まだメッセージがありません</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  最初のメッセージを送ってみましょう！
-                </p>
               </div>
-            ) : (
-              messages.map((message) => {
-                const isOwnMessage = message.user_id === currentUserId
-                const displayName = message.profiles.display_name || message.profiles.username
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${
-                      isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                    }`}
-                  >
-                    {/* アバター */}
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                        {message.profiles.avatar_url ? (
-                          <img
-                            src={message.profiles.avatar_url}
-                            alt={displayName}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          displayName.charAt(0).toUpperCase()
-                        )}
-                      </div>
-                    </div>
+              <p className="text-gray-500 font-medium">まだメッセージがありません</p>
+              <p className="text-sm text-gray-400 mt-1">最初のメッセージを送ってみましょう！</p>
+            </div>
+          ) : (
+            messages.map((message, index) => {
+              const isOwnMessage = message.user_id === currentUserId
+              const displayName = message.profiles.display_name || message.profiles.username
+              const prevMessage = index > 0 ? messages[index - 1] : null
+              const showAvatar = !prevMessage || prevMessage.user_id !== message.user_id
+              const showName = !isOwnMessage && showAvatar
 
-                    {/* メッセージ */}
-                    <div
-                      className={`flex-1 max-w-md ${
-                        isOwnMessage ? 'text-right' : 'text-left'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        {!isOwnMessage && (
-                          <span className="text-sm font-semibold text-gray-700">
-                            {displayName}
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-400">
-                          {new Date(message.created_at).toLocaleTimeString('ja-JP', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+              return (
+                <div
+                  key={message.id}
+                  className={`flex items-end gap-2 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
+                >
+                  {/* アバター */}
+                  {!isOwnMessage && (
+                    <div className="flex-shrink-0 w-9 h-9">
+                      {showAvatar ? (
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow">
+                          {message.profiles.avatar_url ? (
+                            <img src={message.profiles.avatar_url} alt={displayName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            displayName.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-9 h-9" />
+                      )}
+                    </div>
+                  )}
+
+                  <div className={`flex flex-col max-w-[65%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+                    {showName && (
+                      <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
+                        {displayName}
+                      </span>
+                    )}
+                    <div className="flex items-end gap-1.5">
+                      {isOwnMessage && (
+                        <span className="text-xs text-gray-400 mb-0.5 flex-shrink-0">
+                          {new Date(message.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                      </div>
+                      )}
                       <div
-                        className={`inline-block px-4 py-2 rounded-2xl ${
+                        className={`px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed ${
                           isOwnMessage
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                            : 'bg-gray-100 text-gray-900'
+                            ? 'bg-emerald-500 text-white rounded-br-sm'
+                            : 'bg-white text-gray-900 rounded-bl-sm'
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">
-                          {message.content}
-                        </p>
+                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
                       </div>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* 入力エリア */}
-          <div className="border-t border-gray-200 p-4">
-            <div className="flex gap-3">
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="メッセージを入力... (Enterで送信)"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                rows={2}
-                disabled={sending}
-              />
-              <button
-                onClick={handleSend}
-                disabled={!newMessage.trim() || sending}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-              >
-                {sending ? (
-                  <svg
-                    className="w-5 h-5 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* メンバーリスト（右サイドバー） */}
-        <div className="w-64 border-l border-gray-200 p-4 overflow-y-auto bg-gray-50">
-          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            メンバー ({members.length})
-          </h3>
-          <div className="space-y-3">
-            {members.map((member) => {
-              const displayName = member.profiles.display_name || member.profiles.username
-              return (
-                <div key={member.id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {member.profiles.avatar_url ? (
-                      <img
-                        src={member.profiles.avatar_url}
-                        alt={displayName}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      displayName.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {displayName}
-                      {member.user_id === currentUserId && (
-                        <span className="text-xs text-blue-600 ml-1">(あなた)</span>
+                      {!isOwnMessage && (
+                        <span className="text-xs text-gray-400 mb-0.5 flex-shrink-0">
+                          {new Date(message.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       )}
-                    </p>
+                    </div>
                   </div>
                 </div>
               )
-            })}
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* 入力エリア */}
+        <div className="border-t border-gray-200 px-4 py-3 bg-white">
+          <div className="flex items-end gap-2">
+            <textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="メッセージを入力..."
+              className="flex-1 px-4 py-2.5 bg-gray-100 border-0 rounded-2xl focus:ring-2 focus:ring-emerald-400 focus:bg-white resize-none text-sm transition-all"
+              rows={1}
+              disabled={sending}
+              style={{ maxHeight: '120px' }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!newMessage.trim() || sending}
+              className="w-10 h-10 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow flex-shrink-0"
+            >
+              {sending ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              )}
+            </button>
           </div>
+          <p className="hidden sm:block text-xs text-gray-400 mt-1.5 ml-1">Enterで送信・Shift+Enterで改行</p>
+        </div>
+      </div>
+
+      {/* メンバーリスト（右サイドバー） */}
+      <div className="hidden sm:flex w-56 border-l border-gray-100 flex-col bg-gray-50">
+        <div className="px-4 py-4 border-b border-gray-200">
+          <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            メンバー
+            <span className="ml-auto bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">
+              {members.length}
+            </span>
+          </h3>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {members.map((member) => {
+            const displayName = member.profiles.display_name || member.profiles.username
+            const isCurrentUser = member.user_id === currentUserId
+            return (
+              <div
+                key={member.id}
+                className={`flex items-center gap-2.5 p-2 rounded-xl transition-colors ${
+                  isCurrentUser ? 'bg-emerald-50' : 'hover:bg-gray-100'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm">
+                  {member.profiles.avatar_url ? (
+                    <img src={member.profiles.avatar_url} alt={displayName} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-800 truncate">{displayName}</p>
+                  {isCurrentUser && (
+                    <p className="text-xs text-emerald-600">あなた</p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
