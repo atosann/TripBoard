@@ -97,6 +97,13 @@ export default async function ProfilePage({
     ? Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0
 
+  // 文字量によってbioのフォントサイズを変える
+  const bioLength = profile.bio?.length || 0
+  const bioTextSize =
+    bioLength > 200 ? 'text-xs' :
+    bioLength > 100 ? 'text-sm' :
+    'text-base'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
       <MobileNav />
@@ -136,90 +143,139 @@ export default async function ProfilePage({
             {profile.display_name || 'ユーザー'}さんのプロフィール
           </h1>
 
-          {/* メインプロフィールカード - ジモティー風レイアウト */}
+          {/* メインプロフィールカード */}
           <div className="mb-4 sm:mb-6 bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
-            
-            {/* 上段：アバター＋自己紹介 ／ 右：詳細情報 */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-              
-              {/* 左：アバター＋自己紹介 */}
-              <div className="flex flex-row sm:flex-col gap-4 sm:gap-3 sm:w-48 flex-shrink-0">
+
+            {/* ── スマホ: アバター＋横に基本情報、その下に自己紹介 ── */}
+            {/* ── PC   : 左カラム(アバター+基本情報) ／ 右カラム(自己紹介+趣味+SNS) ── */}
+
+            {/* 上段: アバター + 基本情報 (スマホ横並び / PC 左カラム) */}
+            <div className="flex sm:flex-row gap-4 sm:gap-6">
+
+              {/* 左カラム: アバター＋テーブル */}
+              <div className="flex flex-col gap-3 w-28 sm:w-52 flex-shrink-0">
                 {/* アバター */}
-                <div className="w-20 h-20 sm:w-36 sm:h-36 flex-shrink-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-lg flex items-center justify-center text-white text-2xl sm:text-4xl font-bold shadow-md ring-2 ring-emerald-100">
+                <div className="w-24 h-24 sm:w-full sm:aspect-square bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center text-white text-3xl sm:text-5xl font-bold shadow-md ring-2 ring-emerald-100 overflow-hidden flex-shrink-0">
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full rounded-lg object-cover" />
+                    <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
                   ) : (
                     profile.display_name?.charAt(0).toUpperCase()
                   )}
                 </div>
 
-                {/* 自己紹介（スマホでは横並び） */}
-                {profile.bio && (
-                  <div className="flex-1 sm:mt-1">
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-                      {profile.bio}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 右：詳細情報 */}
-              <div className="flex-1 border-t sm:border-t-0 sm:border-l border-gray-200 pt-4 sm:pt-0 sm:pl-6">
-                <table className="w-full text-sm">
+                {/* 基本情報テーブル (PC のみ左カラムに表示) */}
+                <table className="hidden sm:table w-full text-sm">
                   <tbody className="divide-y divide-gray-100">
                     <tr>
-                      <td className="py-2.5 pr-4 text-gray-500 font-medium whitespace-nowrap w-24">ニックネーム</td>
-                      <td className="py-2.5 font-semibold text-gray-900">{profile.display_name || '未設定'}</td>
+                      <td className="py-2 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">ニックネーム</td>
+                      <td className="py-2 font-semibold text-gray-900 text-xs">{profile.display_name || '未設定'}</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 pr-4 text-gray-500 font-medium whitespace-nowrap">性別</td>
-                      <td className="py-2.5 text-gray-900">{profile.gender || '未設定'}</td>
+                      <td className="py-2 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">性別</td>
+                      <td className="py-2 text-gray-900 text-xs">{profile.gender || '未設定'}</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 pr-4 text-gray-500 font-medium whitespace-nowrap">年齢層</td>
-                      <td className="py-2.5 text-gray-900">{profile.age_range || '未設定'}</td>
+                      <td className="py-2 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">年齢層</td>
+                      <td className="py-2 text-gray-900 text-xs">{profile.age_range || '未設定'}</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 pr-4 text-gray-500 font-medium whitespace-nowrap">登録日</td>
-                      <td className="py-2.5 text-gray-900">
+                      <td className="py-2 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">登録日</td>
+                      <td className="py-2 text-gray-900 text-xs">
                         {profile.created_at
                           ? new Date(profile.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })
                           : '不明'}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 pr-4 text-gray-500 font-medium whitespace-nowrap">投稿数</td>
-                      <td className="py-2.5 text-gray-900">{postCount}件</td>
+                      <td className="py-2 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">投稿数</td>
+                      <td className="py-2 text-gray-900 text-xs">{postCount}件</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 pr-4 text-gray-500 font-medium whitespace-nowrap">参加中</td>
-                      <td className="py-2.5 text-gray-900">{participationCount}件</td>
+                      <td className="py-2 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">参加中</td>
+                      <td className="py-2 text-gray-900 text-xs">{participationCount}件</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 右エリア: スマホは基本情報のみ / PC は自己紹介＋趣味＋SNS */}
+              <div className="flex-1 min-w-0">
+
+                {/* 基本情報テーブル (スマホのみ: アバターの横) */}
+                <table className="sm:hidden w-full text-sm mb-0">
+                  <tbody className="divide-y divide-gray-100">
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">ニックネーム</td>
+                      <td className="py-1.5 font-semibold text-gray-900 text-xs">{profile.display_name || '未設定'}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">性別</td>
+                      <td className="py-1.5 text-gray-900 text-xs">{profile.gender || '未設定'}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">年齢層</td>
+                      <td className="py-1.5 text-gray-900 text-xs">{profile.age_range || '未設定'}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">登録日</td>
+                      <td className="py-1.5 text-gray-900 text-xs">
+                        {profile.created_at
+                          ? new Date(profile.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })
+                          : '不明'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">投稿数</td>
+                      <td className="py-1.5 text-gray-900 text-xs">{postCount}件</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 text-gray-500 font-medium whitespace-nowrap text-xs">参加中</td>
+                      <td className="py-1.5 text-gray-900 text-xs">{participationCount}件</td>
                     </tr>
                   </tbody>
                 </table>
 
-                {/* 興味・趣味 */}
-                {profile.interests && profile.interests.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm text-gray-500 font-medium mb-2">興味・趣味</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.interests.split(',').map((interest: string, i: number) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-xs font-semibold shadow-sm"
-                        >
-                          {interest.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* 自己紹介＋趣味＋SNS (PC のみ右カラムに表示) */}
+                <div className="hidden sm:flex flex-col gap-4 border-l border-gray-200 pl-6">
 
-                {/* SNSリンク */}
-                {(profile.instagram_url || profile.twitter_url || profile.facebook_url) && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm text-gray-500 font-medium mb-2">SNS</p>
-                    <div className="flex flex-wrap gap-2">
+                  {/* 自己紹介 */}
+                  <div>
+                    <p className="text-sm text-gray-500 font-medium mb-2">自己紹介</p>
+                    {profile.bio ? (
+                      <div className={`bg-gray-50 border border-gray-200 rounded-lg p-3 ${bioTextSize} text-gray-700 leading-relaxed whitespace-pre-wrap break-words min-h-[6rem]`}>
+                        {profile.bio}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-3 min-h-[6rem] flex flex-col items-center justify-center gap-2">
+                        <p className="text-sm text-gray-400">自己紹介はまだありません</p>
+                        {isOwnProfile && (
+                          <Link href="/main/profile/edit" className="text-xs text-emerald-600 hover:underline font-medium">
+                            編集して追加する
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 興味・趣味 (PC) */}
+                  {profile.interests && profile.interests.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-500 font-medium mb-2">興味・趣味</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {profile.interests.split(',').map((interest: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-xs font-semibold shadow-sm">
+                            {interest.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SNS (PC) */}
+                  {(profile.instagram_url || profile.twitter_url || profile.facebook_url) && (
+                    <div>
+                      <p className="text-sm text-gray-500 font-medium mb-2">SNS</p>
+                      <div className="flex flex-wrap gap-2">
                       {profile.instagram_url && (
                         <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full text-xs font-semibold shadow-sm hover:shadow-md transition-all">
@@ -250,8 +306,85 @@ export default async function ProfilePage({
                     </div>
                   </div>
                 )}
+
+                </div>
               </div>
+
             </div>
+
+            {/* ── スマホ: 自己紹介・興味・SNS を下に全幅表示 ── */}
+            <div className="sm:hidden mt-4 pt-4 border-t border-gray-200 flex flex-col gap-4">
+
+              {/* 自己紹介 (スマホ) */}
+              <div>
+                <p className="text-sm text-gray-500 font-medium mb-2">自己紹介</p>
+                {profile.bio ? (
+                  <div className={`bg-gray-50 border border-gray-200 rounded-lg p-3 ${bioTextSize} text-gray-700 leading-relaxed whitespace-pre-wrap break-words`}>
+                    {profile.bio}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-3 flex flex-col items-center justify-center gap-2 py-6">
+                    <p className="text-sm text-gray-400">自己紹介はまだありません</p>
+                    {isOwnProfile && (
+                      <Link href="/main/profile/edit" className="text-xs text-emerald-600 hover:underline font-medium">
+                        編集して追加する
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 興味・趣味 (スマホ) */}
+              {profile.interests && profile.interests.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 font-medium mb-2">興味・趣味</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.interests.split(',').map((interest: string, i: number) => (
+                      <span key={i} className="px-3 py-1 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-xs font-semibold shadow-sm">
+                        {interest.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SNS (スマホ) */}
+              {(profile.instagram_url || profile.twitter_url || profile.facebook_url) && (
+                <div>
+                  <p className="text-sm text-gray-500 font-medium mb-2">SNS</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.instagram_url && (
+                      <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full text-xs font-semibold shadow-sm">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                        Instagram
+                      </a>
+                    )}
+                    {profile.twitter_url && (
+                      <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-full text-xs font-semibold shadow-sm">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        Twitter / X
+                      </a>
+                    )}
+                    {profile.facebook_url && (
+                      <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-full text-xs font-semibold shadow-sm">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* 投稿一覧タブ風 */}
