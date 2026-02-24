@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
@@ -19,7 +19,11 @@ export default function EditProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState<ProfileData>({
     bio: '',
     interests: '',
@@ -33,16 +37,11 @@ export default function EditProfilePage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // プロフィールデータを取得
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          router.push('/auth/login');
-          return;
-        }
+        if (!user) { router.push('/auth/login'); return; }
 
         const { data: profile, error: fetchError } = await supabase
           .from('profiles')
@@ -50,9 +49,7 @@ export default function EditProfilePage() {
           .eq('id', user.id)
           .single();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          throw fetchError;
-        }
+        if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
         if (profile) {
           setFormData({
@@ -62,6 +59,8 @@ export default function EditProfilePage() {
             twitter_url: profile.twitter_url || '',
             facebook_url: profile.facebook_url || '',
           });
+          setAvatarUrl(profile.avatar_url || null);
+          setDisplayName(profile.display_name || '');
         }
       } catch (err) {
         console.error('プロフィール取得エラー:', err);
@@ -70,40 +69,86 @@ export default function EditProfilePage() {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [supabase, router]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  // アバター画像をアップロード
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // ファイルサイズチェック（5MB以内）
+    if (file.size > 5 * 1024 * 1024) {
+      setError('画像サイズは5MB以内にしてください');
+      return;
+    }
+    // 画像形式チェック
+    if (!file.type.startsWith('image/')) {
+      setError('画像ファイルを選択してください');
+      return;
+    }
+
+    setAvatarUploading(true);
+    setError('');
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('未ログイン');
+
+      // ファイル名をユーザーIDベースで固定（上書き更新）
+      const ext = file.name.split('.').pop();
+      const filePath = `avatars/${user.id}.${ext}`;
+
+      // Supabaseストレージにアップロード
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // 公開URLを取得
+      const { data: { publicUrl } } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      // キャッシュバスター付きURLで即時反映
+      const urlWithCache = `${publicUrl}?t=${Date.now()}`;
+      setAvatarUrl(urlWithCache);
+
+      // profilesテーブルを更新
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id, avatar_url: publicUrl, updated_at: new Date().toISOString() });
+
+      if (updateError) throw updateError;
+
+      setSuccess('アバターを更新しました！');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('アバターアップロードエラー:', err);
+      setError('アバターのアップロードに失敗しました。Supabaseのストレージバケット「profiles」が存在するか確認してください。');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateUrl = (url: string, platform: string): boolean => {
-    if (!url) return true; // 空欄はOK
-    
+    if (!url) return true;
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      
       switch (platform) {
-        case 'instagram':
-          return hostname.includes('instagram.com');
-        case 'twitter':
-          return hostname.includes('twitter.com') || hostname.includes('x.com');
-        case 'facebook':
-          return hostname.includes('facebook.com') || hostname.includes('fb.com');
-        default:
-          return false;
+        case 'instagram': return hostname.includes('instagram.com');
+        case 'twitter': return hostname.includes('twitter.com') || hostname.includes('x.com');
+        case 'facebook': return hostname.includes('facebook.com') || hostname.includes('fb.com');
+        default: return false;
       }
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,29 +156,20 @@ export default function EditProfilePage() {
     setError('');
     setSuccess('');
 
-    // URLバリデーション
     if (formData.instagram_url && !validateUrl(formData.instagram_url, 'instagram')) {
-      setError('正しいInstagramのURLを入力してください');
-      return;
+      setError('正しいInstagramのURLを入力してください'); return;
     }
     if (formData.twitter_url && !validateUrl(formData.twitter_url, 'twitter')) {
-      setError('正しいTwitter/XのURLを入力してください');
-      return;
+      setError('正しいTwitter/XのURLを入力してください'); return;
     }
     if (formData.facebook_url && !validateUrl(formData.facebook_url, 'facebook')) {
-      setError('正しいFacebookのURLを入力してください');
-      return;
+      setError('正しいFacebookのURLを入力してください'); return;
     }
 
     setSaving(true);
-
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
+      if (!user) { router.push('/auth/login'); return; }
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -150,9 +186,7 @@ export default function EditProfilePage() {
       if (updateError) throw updateError;
 
       setSuccess('プロフィールを更新しました！');
-      setTimeout(() => {
-        router.push('/main/profile');
-      }, 1500);
+      setTimeout(() => { router.push('/main/profile'); }, 1500);
     } catch (err) {
       console.error('更新エラー:', err);
       setError('プロフィールの更新に失敗しました');
@@ -188,19 +222,68 @@ export default function EditProfilePage() {
           <p className="text-gray-600">あなたの情報を更新して、他のユーザーに自己紹介しましょう</p>
         </div>
 
-        {/* メインフォーム */}
         <div className="bg-white rounded-2xl shadow-lg p-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
-
           {success && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-700 text-sm">{success}</p>
             </div>
           )}
+
+          {/* ── アバター設定セクション ── */}
+          <div className="mb-8 pb-8 border-b border-gray-200">
+            <p className="block text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              アバター画像
+            </p>
+            <div className="flex items-center gap-6">
+              {/* アバタープレビュー */}
+              <div className="relative flex-shrink-0">
+                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-white text-3xl font-bold shadow-md ring-2 ring-emerald-100 overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="アバター" className="w-full h-full object-cover" />
+                  ) : (
+                    displayName?.charAt(0).toUpperCase() || '?'
+                  )}
+                </div>
+                {/* アップロード中インジケーター */}
+                {avatarUploading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-40 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* ボタンと説明 */}
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {avatarUploading ? 'アップロード中...' : '画像を選択'}
+                </button>
+                <p className="text-xs text-gray-500">JPG・PNG・GIF対応 / 5MB以内</p>
+              </div>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* 自己紹介 */}
@@ -253,12 +336,9 @@ export default function EditProfilePage() {
                 </svg>
                 SNSリンク（任意）
               </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                SNSを登録すると、他のユーザーがあなたのことをより知ることができ、信頼性が高まります。
-              </p>
+              <p className="text-sm text-gray-600 mb-6">SNSを登録すると、他のユーザーがあなたのことをより知ることができ、信頼性が高まります。</p>
 
               <div className="space-y-6">
-                {/* Instagram */}
                 <div>
                   <label htmlFor="instagram_url" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <svg className="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 24 24">
@@ -266,18 +346,11 @@ export default function EditProfilePage() {
                     </svg>
                     Instagram
                   </label>
-                  <input
-                    type="url"
-                    id="instagram_url"
-                    name="instagram_url"
-                    value={formData.instagram_url}
-                    onChange={handleChange}
+                  <input type="url" id="instagram_url" name="instagram_url" value={formData.instagram_url} onChange={handleChange}
                     placeholder="https://instagram.com/username"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all" />
                 </div>
 
-                {/* Twitter/X */}
                 <div>
                   <label htmlFor="twitter_url" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
@@ -285,18 +358,11 @@ export default function EditProfilePage() {
                     </svg>
                     Twitter / X
                   </label>
-                  <input
-                    type="url"
-                    id="twitter_url"
-                    name="twitter_url"
-                    value={formData.twitter_url}
-                    onChange={handleChange}
+                  <input type="url" id="twitter_url" name="twitter_url" value={formData.twitter_url} onChange={handleChange}
                     placeholder="https://twitter.com/username または https://x.com/username"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
 
-                {/* Facebook */}
                 <div>
                   <label htmlFor="facebook_url" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
@@ -304,15 +370,9 @@ export default function EditProfilePage() {
                     </svg>
                     Facebook
                   </label>
-                  <input
-                    type="url"
-                    id="facebook_url"
-                    name="facebook_url"
-                    value={formData.facebook_url}
-                    onChange={handleChange}
+                  <input type="url" id="facebook_url" name="facebook_url" value={formData.facebook_url} onChange={handleChange}
                     placeholder="https://facebook.com/username"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
               </div>
             </div>
