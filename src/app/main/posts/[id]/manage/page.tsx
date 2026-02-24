@@ -52,7 +52,7 @@ export default async function ManageRequestsPage({
     (participants || []).map(async (participant) => {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, bio')
+        .select('id, displayname, avatar_url, bio')
         .eq('id', participant.user_id)
         .single()
 
