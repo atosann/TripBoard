@@ -41,7 +41,6 @@ export default async function JoinedPostsPage() {
   console.log('📋 参加中のチャットルーム:', chatMembers)
 
   if (!chatMembers || chatMembers.length === 0) {
-    // 参加しているチャットがない場合
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
         <header className="bg-white shadow-sm border-b border-gray-200">
@@ -74,7 +73,6 @@ export default async function JoinedPostsPage() {
     )
   }
 
-  // チャットルームIDから投稿情報を取得
   const chatRoomIds = chatMembers.map(cm => cm.chat_room_id)
   
   const { data: chatRooms } = await supabase
@@ -103,7 +101,6 @@ export default async function JoinedPostsPage() {
 
   const postIds = chatRooms.map(cr => cr.post_id)
   
-  // 投稿の詳細情報を取得
   const { data: posts } = await supabase
     .from('posts')
     .select(`
@@ -119,7 +116,6 @@ export default async function JoinedPostsPage() {
 
   console.log('📝 投稿情報:', posts)
 
-  // チャットルームIDと投稿をマッピング
   const postsWithChatRoom = (posts || []).map(post => {
     const chatRoom = chatRooms.find(cr => cr.post_id === post.id)
     const memberInfo = chatMembers.find(cm => cm.chat_room_id === chatRoom?.id)
@@ -130,7 +126,6 @@ export default async function JoinedPostsPage() {
     }
   })
 
-  // 参加メンバー数を取得
   const { data: allMembers } = await supabase
     .from('chat_members')
     .select('chat_room_id')
@@ -152,7 +147,7 @@ export default async function JoinedPostsPage() {
               className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0118 0z" />
               </svg>
               他の投稿を探す
             </Link>
@@ -249,7 +244,52 @@ export default async function JoinedPostsPage() {
                         </span>
                       </div>
                     )}
+                    {(post.start_time || post.end_time) && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-gray-700">
+                          {post.start_time && post.end_time
+                            ? `${post.start_time.slice(0, 5)} 〜 ${post.end_time.slice(0, 5)}`
+                            : post.start_time
+                            ? `${post.start_time.slice(0, 5)} 〜`
+                            : `〜 ${post.end_time.slice(0, 5)}`}
+                        </span>
+                      </div>
+                    )}
+                    {post.cost_type && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-gray-700">
+                          {post.cost_type}{post.cost_note ? `・${post.cost_note}` : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* タグ */}
+                  {(post.age_preference || post.gender_preference || post.max_participants) && (
+                    <div className="flex gap-2 flex-wrap mb-4">
+                      {post.age_preference && (
+                        <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">
+                          {post.age_preference}
+                        </span>
+                      )}
+                      {post.gender_preference && (
+                        <span className="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded-full">
+                          {post.gender_preference}
+                        </span>
+                      )}
+                      {post.max_participants && (
+                        <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">
+                          定員{post.max_participants}名
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* 説明文 */}
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">

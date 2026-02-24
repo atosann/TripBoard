@@ -147,7 +147,52 @@ export default async function AllPostsPage() {
                           </span>
                         </div>
                       )}
+                      {(post.start_time || post.end_time) && (
+                        <div className="flex items-center gap-2 text-xs sm:text-sm">
+                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-gray-700">
+                            {post.start_time && post.end_time
+                              ? `${post.start_time.slice(0, 5)} 〜 ${post.end_time.slice(0, 5)}`
+                              : post.start_time
+                              ? `${post.start_time.slice(0, 5)} 〜`
+                              : `〜 ${post.end_time.slice(0, 5)}`}
+                          </span>
+                        </div>
+                      )}
+                      {post.cost_type && (
+                        <div className="flex items-center gap-2 text-xs sm:text-sm">
+                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-gray-700 truncate">
+                            {post.cost_type}{post.cost_note ? `・${post.cost_note}` : ''}
+                          </span>
+                        </div>
+                      )}
                     </div>
+
+                    {/* タグ */}
+                    {(post.age_preference || post.gender_preference || post.max_participants) && (
+                      <div className="flex gap-2 flex-wrap mb-3 sm:mb-4">
+                        {post.age_preference && (
+                          <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">
+                            {post.age_preference}
+                          </span>
+                        )}
+                        {post.gender_preference && (
+                          <span className="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded-full">
+                            {post.gender_preference}
+                          </span>
+                        )}
+                        {post.max_participants && (
+                          <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">
+                            定員{post.max_participants}名
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     {/* 説明文 */}
                     <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">

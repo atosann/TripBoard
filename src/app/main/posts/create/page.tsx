@@ -28,6 +28,12 @@ export default function CreatePostPage() {
     destination: '',
     travel_date: '',
     max_participants: 2,
+    start_time: '',
+    end_time: '',
+    cost_type: '',
+    cost_note: '',
+    gender_preference: '',
+    age_preference: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +64,12 @@ export default function CreatePostPage() {
         destination: formData.destination,
         travel_date: formData.travel_date,
         max_participants: formData.max_participants,
+        start_time: formData.start_time || null,
+        end_time: formData.end_time || null,
+        cost_type: formData.cost_type || null,
+        cost_note: formData.cost_note || null,
+        gender_preference: formData.gender_preference || null,
+        age_preference: formData.age_preference || null,
       })
 
       // 1. 投稿を作成
@@ -70,6 +82,12 @@ export default function CreatePostPage() {
           destination: formData.destination,
           travel_date: formData.travel_date,
           max_participants: formData.max_participants,
+          start_time: formData.start_time || null,
+          end_time: formData.end_time || null,
+          cost_type: formData.cost_type || null,
+          cost_note: formData.cost_note || null,
+          gender_preference: formData.gender_preference || null,
+          age_preference: formData.age_preference || null,
         })
         .select()
         .single()
@@ -305,6 +323,127 @@ export default function CreatePostPage() {
                 <p className="text-xs text-gray-500 mt-1">
                   ※ 過去の日時は選択できません
                 </p>
+              </div>
+
+              {/* 開始・終了時間 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  予定時間帯
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  />
+                  <span className="text-gray-500 font-medium">〜</span>
+                  <input
+                    type="time"
+                    value={formData.end_time}
+                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">※ 任意。未定の場合は空欄でOKです</p>
+              </div>
+
+              {/* 費用 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  費用
+                </label>
+                <select
+                  value={formData.cost_type}
+                  onChange={(e) => setFormData({ ...formData, cost_type: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer mb-2"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="">選択してください（任意）</option>
+                  <option value="無料">無料</option>
+                  <option value="割り勘">割り勘</option>
+                  <option value="金額目安あり">金額目安あり</option>
+                </select>
+                <input
+                  type="text"
+                  value={formData.cost_note}
+                  onChange={(e) => setFormData({ ...formData, cost_note: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  placeholder="例：入場料500円程度、飲食代は各自負担"
+                  maxLength={100}
+                />
+                <p className="text-xs text-gray-500 mt-1">※ 補足があれば記入してください</p>
+              </div>
+
+              {/* 対象年齢層 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  対象年齢層
+                </label>
+                <select
+                  value={formData.age_preference}
+                  onChange={(e) => setFormData({ ...formData, age_preference: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="">不問（任意）</option>
+                  <option value="18-24歳歓迎">18-24歳歓迎</option>
+                  <option value="20代歓迎">20代歓迎</option>
+                  <option value="30代歓迎">30代歓迎</option>
+                  <option value="40代歓迎">40代歓迎</option>
+                  <option value="20〜30代歓迎">20〜30代歓迎</option>
+                  <option value="30〜40代歓迎">30〜40代歓迎</option>
+                  <option value="年齢不問">年齢不問</option>
+                </select>
+              </div>
+
+              {/* 男女比希望 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  男女比希望
+                </label>
+                <select
+                  value={formData.gender_preference}
+                  onChange={(e) => setFormData({ ...formData, gender_preference: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="">不問（任意）</option>
+                  <option value="男女不問">男女不問</option>
+                  <option value="女性限定">女性限定</option>
+                  <option value="男性限定">男性限定</option>
+                  <option value="男女半々希望">男女半々希望</option>
+                </select>
               </div>
 
               {/* 注意事項 */}
