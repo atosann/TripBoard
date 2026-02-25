@@ -22,7 +22,7 @@ export default function TermsPage() {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="shadow-xl rounded-xl overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-5">
-            <h2 className="text-2xl font-bold">Trip Board 利用規約</h2>
+            <h2 className="text-2xl font-bold">みんなのメンバー募集掲示板 利用規約</h2>
             <p className="text-emerald-50 text-sm mt-1">最終更新: 2025年1月1日</p>
           </div>
 
@@ -34,7 +34,7 @@ export default function TermsPage() {
                 サービス概要
               </h3>
               <p className="text-gray-700 leading-relaxed pl-9">
-                Trip Board（以下「本サービス」）は、近場散策・日帰り旅行・各種アクティビティの参加者募集を目的とした掲示板およびグループチャット機能を提供するウェブサービスです。本規約に同意した上でご利用ください。
+                みんなのメンバー募集掲示板（以下「本サービス」）は、近場散策・日帰り旅行・各種アクティビティの参加者募集を目的とした掲示板およびグループチャット機能を提供するウェブサービスです。本規約に同意した上でご利用ください。
               </p>
             </section>
 
