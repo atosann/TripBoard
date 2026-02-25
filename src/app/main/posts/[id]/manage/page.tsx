@@ -39,7 +39,6 @@ export default async function ManageRequestsPage({
     redirect('/main')
   }
 
-  // 参加申請を取得
   const { data: participants } = await supabase
     .from('participants')
     .select('*')
@@ -47,7 +46,6 @@ export default async function ManageRequestsPage({
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
 
-  // 各参加申請者のプロフィール情報を個別に取得
   const requests = await Promise.all(
     (participants || []).map(async (participant) => {
       const { data: profile } = await supabase
@@ -69,24 +67,44 @@ export default async function ManageRequestsPage({
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            参加申請の管理
-          </h1>
-          <p className="text-gray-600">
-            「{post.title}」への参加申請
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      {/* ヘッダー */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <a href={`/main/posts/${id}`}>
+              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                戻る
+              </button>
+            </a>
+            <h1 className="text-2xl font-bold text-gray-900">参加申請の管理</h1>
+          </div>
         </div>
+      </header>
 
-        <ManageRequestsClient 
-          requests={requests}
-          postId={id}
-          postTitle={post.title}
-          postAuthorId={post.user_id}
-        />
-      </div>
+      {/* メインコンテンツ */}
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="shadow-xl rounded-xl overflow-hidden border-0">
+          {/* カードヘッダー */}
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-5">
+            <h2 className="text-2xl font-bold">申請一覧</h2>
+            <p className="text-emerald-50 text-sm mt-1">「{post.title}」への参加申請</p>
+          </div>
+
+          {/* カードボディ */}
+          <div className="bg-white px-6 py-6">
+            <ManageRequestsClient 
+              requests={requests}
+              postId={id}
+              postTitle={post.title}
+              postAuthorId={post.user_id}
+            />
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
