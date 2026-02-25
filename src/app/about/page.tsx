@@ -57,7 +57,7 @@ export default function AboutPage() {
         <div className="shadow-xl rounded-xl overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-10 text-center">
             <div className="text-5xl mb-4">👥</div>
-            <h2 className="text-3xl font-bold mb-3">Trip Board</h2>
+            <h2 className="text-3xl font-bold mb-3">みんなのメンバー募集掲示板</h2>
             <p className="text-emerald-50 text-lg leading-relaxed max-w-xl mx-auto">
               「一緒に行く人がいない」をなくす。<br />
               同じ気持ちの仲間と、もっと気軽につながれる場所。
@@ -78,7 +78,7 @@ export default function AboutPage() {
               社会人になると、学生の頃のように気軽に誘える友人と予定を合わせることが難しくなります。同じ趣味を持つ人と出会う機会も限られています。
             </p>
             <p>
-              Trip Boardは、そういった「やりたいこと」を持つ人同士が気軽につながれる場所として作られました。難しい手続きは不要です。やりたいことを投稿して、同じ気持ちの仲間を見つける。それだけです。
+              みんなのメンバー募集掲示板は、そういった「やりたいこと」を持つ人同士が気軽につながれる場所として作られました。難しい手続きは不要です。やりたいことを投稿して、同じ気持ちの仲間を見つける。それだけです。
             </p>
             <p>
               近場の散策から旅行、カラオケ、スポーツまで——あなたの「一緒にやりたい！」を実現する場所でありたいと思っています。

@@ -22,14 +22,14 @@ export default function PrivacyPage() {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="shadow-xl rounded-xl overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-5">
-            <h2 className="text-2xl font-bold">Trip Board プライバシーポリシー</h2>
+            <h2 className="text-2xl font-bold">みんなのメンバー募集掲示板 プライバシーポリシー</h2>
             <p className="text-emerald-50 text-sm mt-1">最終更新: 2025年1月1日</p>
           </div>
 
           <div className="bg-white px-6 py-8 space-y-8">
 
             <p className="text-gray-700 leading-relaxed">
-              Trip Board（以下「本サービス」）は、利用者のプライバシーを尊重し、個人情報を適切に管理します。本ポリシーは、収集する情報の種類・利用目的・管理方法について説明します。
+              みんなのメンバー募集掲示板（以下「本サービス」）は、利用者のプライバシーを尊重し、個人情報を適切に管理します。本ポリシーは、収集する情報の種類・利用目的・管理方法について説明します。
             </p>
 
             <section>
