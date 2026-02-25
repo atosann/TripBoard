@@ -372,7 +372,7 @@ export default function CreatePostPage() {
                   }}
                 >
                   <option value="">費用不問</option>
-                  <option value="無料">無料</option>
+                  <option value="主催者負担">主催者負担</option>
                   <option value="割り勘">割り勘</option>
                   <option value="金額目安あり">金額目安あり</option>
                 </select>
