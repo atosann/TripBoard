@@ -267,7 +267,7 @@ export default async function PostDetailPage({
                     </svg>
                   </div>
                   <p className="text-gray-500 text-sm font-medium">まだ参加者がいません</p>
-                  <p className="text-gray-400 text-xs mt-1">最初の参加者になりましょう！</p>
+                  <p className="text-gray-400 text-xs mt-1">{isAuthor ? '参加申請を待ちましょう！' : '最初の参加者になりましょう！'}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
