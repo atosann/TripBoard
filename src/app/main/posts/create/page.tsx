@@ -371,20 +371,20 @@ export default function CreatePostPage() {
                     paddingRight: '2.5rem'
                   }}
                 >
-                  <option value="">費用不問</option>
+                  <option value="">---</option>
                   <option value="主催者負担">主催者負担</option>
                   <option value="割り勘">割り勘</option>
-                  <option value="金額目安あり">金額目安あり</option>
+                  <option value="主催者一部負担">主催者一部負担</option>
                 </select>
                 <input
                   type="text"
                   value={formData.cost_note}
                   onChange={(e) => setFormData({ ...formData, cost_note: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                  placeholder="例：入場料500円程度、飲食代は各自負担"
+                  placeholder="例：1人あたり500円程度"
                   maxLength={100}
                 />
-                <p className="text-xs text-gray-500 mt-1">※ 補足があれば記入してください</p>
+                <p className="text-xs text-gray-500 mt-1">※ 1人あたりの費用目安があれば記入してください</p>
               </div>
 
               {/* 対象年齢層 */}
@@ -407,15 +407,13 @@ export default function CreatePostPage() {
                     paddingRight: '2.5rem'
                   }}
                 >
-                  
+                  <option value="">---</option>
                   <option value="年齢不問">年齢不問</option>
-                  <option value="18-24歳歓迎">18-24歳歓迎</option>
                   <option value="20代歓迎">20代歓迎</option>
                   <option value="30代歓迎">30代歓迎</option>
                   <option value="40代歓迎">40代歓迎</option>
-                  <option value="20〜30代歓迎">20〜30代歓迎</option>
-                  <option value="30〜40代歓迎">30〜40代歓迎</option>
-                  
+                  <option value="50代歓迎">50代歓迎</option>
+                  <option value="60代歓迎">60代歓迎</option>
                 </select>
               </div>
 
