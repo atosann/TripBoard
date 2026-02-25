@@ -70,7 +70,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAuthPath && session) {
-    return NextResponse.redirect(new URL('/main/posts', request.url))
+    return NextResponse.redirect(new URL('/main/top', request.url))
   }
 
   return response
