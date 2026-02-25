@@ -1,4 +1,3 @@
-// src/components/JoinRequestButton.tsx
 'use client'
 
 import { useState } from 'react'
@@ -66,7 +65,6 @@ export function JoinRequestButton({
       if (participantError) {
         console.error('参加申請エラー:', participantError)
         
-        // エラーの詳細をログ出力
         console.error('Error details:', {
           code: participantError.code,
           message: participantError.message,
@@ -98,6 +96,25 @@ export function JoinRequestButton({
       if (notificationError) {
         console.error('通知作成エラー:', notificationError)
       }
+
+      // --------- ↓ 追加: 投稿者へメール通知 --------- //
+      try {
+        await fetch('/api/send-join-request-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authorId,
+            applicantName: profile?.username || user.email,
+            postTitle,
+            message: message.trim(),
+            postId,
+          }),
+        })
+      } catch (emailError) {
+        // メール送信失敗は申請フロー自体を止めない
+        console.error('メール送信エラー:', emailError)
+      }
+      // --------- ↑ 追加ここまで --------- //
 
       alert('参加申請を送信しました！投稿者の承認をお待ちください。')
       setShowModal(false)
