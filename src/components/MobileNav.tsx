@@ -103,16 +103,7 @@ export function MobileNav() {
         }`}
       >
         <div className="p-6">
-          <div className="flex items-center gap-3 mb-8 mt-12">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-900">旅行アプリ</span>
-          </div>
-
-          <nav className="space-y-2">
+          <nav className="space-y-2 mt-12">
             {navItems.map((item) => {
               const isActive = pathname === item.href
               return (
