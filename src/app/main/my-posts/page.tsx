@@ -35,6 +35,7 @@ export default async function MyPostsPage() {
     .from('posts')
     .select('*')
     .eq('user_id', user.id)
+    .gt('travel_date', new Date().toISOString())
     .order('created_at', { ascending: false })
 
   return (
@@ -58,7 +59,6 @@ export default async function MyPostsPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* 統計情報 */}
           <div className="mb-6 bg-white rounded-xl shadow-lg p-6 border-2 border-emerald-200">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
@@ -73,7 +73,6 @@ export default async function MyPostsPage() {
             </div>
           </div>
 
-          {/* 投稿一覧 */}
           {!posts || posts.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
               <svg className="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +98,6 @@ export default async function MyPostsPage() {
                   className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-emerald-300"
                 >
                   <div className="p-6">
-                    {/* ヘッダー部分 */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <Link
@@ -118,7 +116,6 @@ export default async function MyPostsPage() {
                       </div>
                     </div>
 
-                    {/* 詳細情報 */}
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       {post.destination && (
                         <div className="flex items-center gap-2 text-sm">
@@ -168,7 +165,6 @@ export default async function MyPostsPage() {
                       )}
                     </div>
 
-                    {/* タグ */}
                     {(post.age_preference || post.gender_preference || post.max_participants) && (
                       <div className="flex gap-2 flex-wrap mb-4">
                         {post.age_preference && (
@@ -189,12 +185,10 @@ export default async function MyPostsPage() {
                       </div>
                     )}
 
-                    {/* 説明文 */}
                     <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                       {post.content || '説明なし'}
                     </p>
 
-                    {/* アクションボタン */}
                     <div className="flex gap-3">
                       <Link
                         href={`/main/posts/${post.id}/edit`}

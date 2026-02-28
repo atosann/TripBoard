@@ -37,7 +37,6 @@ export default async function PostDetailPage({
     redirect('/login')
   }
 
-  // 投稿の詳細を取得
   const { data: post } = await supabase
     .from('posts')
     .select(`
@@ -57,14 +56,12 @@ export default async function PostDetailPage({
     redirect('/main/all-posts')
   }
 
-  // チャットルームを取得
   const { data: chatRoom } = await supabase
     .from('chat_rooms')
     .select('*')
     .eq('post_id', id)
     .maybeSingle()
 
-  // チャットルームが見つからない場合は作成する
   let finalChatRoom = chatRoom
   if (!chatRoom) {
     const { data: newChatRoom } = await supabase
@@ -76,7 +73,6 @@ export default async function PostDetailPage({
     if (newChatRoom) {
       finalChatRoom = newChatRoom
       
-      // 投稿者をチャットメンバーに追加
       if (post.user_id === user.id) {
         await supabase
           .from('chat_members')
@@ -89,7 +85,6 @@ export default async function PostDetailPage({
     }
   }
 
-  // 参加メンバーを取得
   const { data: participants } = await supabase
     .from('participants')
     .select(`
@@ -104,7 +99,6 @@ export default async function PostDetailPage({
     .eq('post_id', id)
     .eq('status', 'joined')
 
-  // 自分が既に参加申請しているかチェック
   const { data: existingRequest } = await supabase
     .from('participants')
     .select('*')
@@ -115,12 +109,12 @@ export default async function PostDetailPage({
   const isAuthor = post.user_id === user.id
   const hasRequested = !!existingRequest
   const isApproved = existingRequest?.status === 'joined'
+  const isExpired = post.travel_date && new Date(post.travel_date) < new Date() // 追加
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-8">
 
-        {/* 戻るボタン */}
         <Link
           href="/main/all-posts"
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-6 transition-colors group"
@@ -131,7 +125,6 @@ export default async function PostDetailPage({
           投稿一覧に戻る
         </Link>
 
-        {/* タイトルカード */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-8">
             <h1 className="text-2xl font-bold text-white mb-3 leading-snug">{post.title}</h1>
@@ -155,7 +148,6 @@ export default async function PostDetailPage({
 
           <div className="px-6 py-6 space-y-6">
 
-            {/* 投稿者情報 */}
             <section>
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">投稿者</h2>
               <Link
@@ -181,7 +173,6 @@ export default async function PostDetailPage({
               </Link>
             </section>
 
-            {/* 詳細情報 */}
             <section>
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">詳細</h2>
               <div className="grid grid-cols-2 gap-3">
@@ -244,7 +235,6 @@ export default async function PostDetailPage({
               </div>
             </section>
 
-            {/* 説明文 */}
             <section>
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">内容</h2>
               <div className="bg-gray-50 rounded-xl p-4">
@@ -254,7 +244,6 @@ export default async function PostDetailPage({
               </div>
             </section>
 
-            {/* 参加メンバー */}
             <section>
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
                 参加メンバー <span className="text-emerald-500">({participants?.length || 0}人)</span>
@@ -301,10 +290,11 @@ export default async function PostDetailPage({
           </div>
         </div>
 
-        {/* アクションボタン */}
+        {/* ===== アクションボタン（ここだけ変更） ===== */}
         <div className="flex flex-col gap-2">
           {isAuthor ? (
             <>
+              {/* チャットボタンは期限切れでも表示 */}
               {finalChatRoom ? (
                 <Link
                   href={`/main/chats/${finalChatRoom.id}`}
@@ -320,24 +310,50 @@ export default async function PostDetailPage({
                   チャットルームを作成できませんでした
                 </div>
               )}
-              <Link
-                href={`/main/posts/${post.id}/edit`}
-                className="w-full text-center px-6 py-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm"
-              >
+              {/* 編集・管理ボタンは期限切れなら非表示 */}
+              {!isExpired && (
+                <>
+                  <Link
+                    href={`/main/posts/${post.id}/edit`}
+                    className="w-full text-center px-6 py-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    投稿を編集
+                  </Link>
+                  <Link
+                    href={`/main/posts/${post.id}/manage`}
+                    className="w-full text-center px-6 py-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    参加申請を管理
+                  </Link>
+                </>
+              )}
+            </>
+          ) : isExpired ? (
+            /* 期限切れ・非投稿者は申請不可 */
+            <>
+              {isApproved && finalChatRoom && (
+                <Link
+                  href={`/main/chats/${finalChatRoom.id}`}
+                  className="w-full text-center px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  グループチャットに参加
+                </Link>
+              )}
+              <div className="w-full text-center px-6 py-4 bg-gray-100 text-gray-500 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm border border-gray-200">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                投稿を編集
-              </Link>
-              <Link
-                href={`/main/posts/${post.id}/manage`}
-                className="w-full text-center px-6 py-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                参加申請を管理
-              </Link>
+                募集受付終了
+              </div>
             </>
           ) : isApproved ? (
             <>
