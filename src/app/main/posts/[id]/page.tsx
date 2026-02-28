@@ -72,7 +72,6 @@ export default async function PostDetailPage({
     
     if (newChatRoom) {
       finalChatRoom = newChatRoom
-      
       if (post.user_id === user.id) {
         await supabase
           .from('chat_members')
@@ -106,10 +105,20 @@ export default async function PostDetailPage({
     .eq('user_id', user.id)
     .maybeSingle()
 
+  // 投稿者の評価を取得
+  const { data: authorReviews } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('reviewee_id', post.author.id)
+
+  const authorAvgRating = authorReviews && authorReviews.length > 0
+    ? authorReviews.reduce((sum, r) => sum + r.rating, 0) / authorReviews.length
+    : null
+
   const isAuthor = post.user_id === user.id
   const hasRequested = !!existingRequest
   const isApproved = existingRequest?.status === 'joined'
-  const isExpired = post.travel_date && new Date(post.travel_date) < new Date() // 追加
+  const isExpired = post.travel_date && new Date(post.travel_date) < new Date()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,6 +174,13 @@ export default async function PostDetailPage({
                   <div className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">{post.author.display_name || post.author.username}</div>
                   {post.author.bio && (
                     <p className="text-gray-500 text-sm mt-0.5 line-clamp-1">{post.author.bio}</p>
+                  )}
+                  {authorAvgRating !== null && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-yellow-400 text-xs">⭐</span>
+                      <span className="text-xs font-semibold text-gray-700">{authorAvgRating.toFixed(1)}</span>
+                      <span className="text-xs text-gray-400">({authorReviews!.length}件)</span>
+                    </div>
                   )}
                 </div>
                 <svg className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,11 +306,9 @@ export default async function PostDetailPage({
           </div>
         </div>
 
-        {/* ===== アクションボタン（ここだけ変更） ===== */}
         <div className="flex flex-col gap-2">
           {isAuthor ? (
             <>
-              {/* チャットボタンは期限切れでも表示 */}
               {finalChatRoom ? (
                 <Link
                   href={`/main/chats/${finalChatRoom.id}`}
@@ -310,7 +324,6 @@ export default async function PostDetailPage({
                   チャットルームを作成できませんでした
                 </div>
               )}
-              {/* 編集・管理ボタンは期限切れなら非表示 */}
               {!isExpired && (
                 <>
                   <Link
@@ -335,7 +348,6 @@ export default async function PostDetailPage({
               )}
             </>
           ) : isExpired ? (
-            /* 期限切れ・非投稿者は申請不可 */
             <>
               {isApproved && finalChatRoom && (
                 <Link
