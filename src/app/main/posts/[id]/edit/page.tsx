@@ -7,6 +7,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link';
 
+const PREFECTURES = [
+  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+  '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+  '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+  '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+]
+
 interface Post {
   id: string;
   title: string;
@@ -14,6 +24,12 @@ interface Post {
   destination: string;
   travel_date: string;
   max_participants: number;
+  start_time?: string;
+  end_time?: string;
+  cost_type?: string;
+  cost_note?: string;
+  gender_preference?: string;
+  age_preference?: string;
 }
 
 export default function EditPostPage() {
@@ -30,6 +46,12 @@ export default function EditPostPage() {
     destination: '',
     travel_date: '',
     max_participants: '',
+    start_time: '',
+    end_time: '',
+    cost_type: '',
+    cost_note: '',
+    gender_preference: '',
+    age_preference: '',
   });
   const [error, setError] = useState('');
 
@@ -38,7 +60,6 @@ export default function EditPostPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // 投稿データを取得
   useEffect(() => {
     if (!postId) return;
 
@@ -60,6 +81,12 @@ export default function EditPostPage() {
           destination: postData.destination || '',
           travel_date: postData.travel_date || '',
           max_participants: postData.max_participants?.toString() || '',
+          start_time: postData.start_time || '',
+          end_time: postData.end_time || '',
+          cost_type: postData.cost_type || '',
+          cost_note: postData.cost_note || '',
+          gender_preference: postData.gender_preference || '',
+          age_preference: postData.age_preference || '',
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : '投稿の取得に失敗しました');
@@ -84,7 +111,6 @@ export default function EditPostPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // バリデーション
     if (!formData.title.trim()) {
       setError('タイトルを入力してください');
       return;
@@ -102,7 +128,6 @@ export default function EditPostPage() {
       return;
     }
 
-    // スパムチェック
     const spamKeywords = ['副業', '稼げる', '投資', 'LINE', 'DM', '出会い'];
     const content = (formData.title + ' ' + formData.content).toLowerCase();
     const hasSpam = spamKeywords.some(keyword => content.includes(keyword.toLowerCase()));
@@ -127,6 +152,12 @@ export default function EditPostPage() {
           destination: formData.destination,
           travel_date: formData.travel_date,
           max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
+          start_time: formData.start_time || null,
+          end_time: formData.end_time || null,
+          cost_type: formData.cost_type || null,
+          cost_note: formData.cost_note || null,
+          gender_preference: formData.gender_preference || null,
+          age_preference: formData.age_preference || null,
         }),
       });
 
@@ -169,6 +200,14 @@ export default function EditPostPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const selectStyle = {
+    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+    backgroundPosition: 'right 0.5rem center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '1.5em 1.5em',
+    paddingRight: '2.5rem'
   };
 
   if (loading) {
@@ -242,7 +281,7 @@ export default function EditPostPage() {
                   <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                   </svg>
-                  タイトル <span className="text-red-500">*</span>
+                  タイトル *
                 </label>
                 <input
                   type="text"
@@ -263,40 +302,81 @@ export default function EditPostPage() {
                   <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  内容 <span className="text-red-500">*</span>
+                  説明 *
                 </label>
                 <textarea
                   id="content"
                   name="content"
                   value={formData.content}
                   onChange={handleChange}
-                  rows={8}
-                  maxLength={2000}
+                  rows={5}
+                  maxLength={500}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
                   required
                 />
-                <p className="mt-1 text-xs text-gray-500">{formData.content.length}/2000文字</p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">{formData.content.length}/500文字</p>
+                  {formData.content.length > 450 && (
+                    <p className="text-xs text-amber-600">残り{500 - formData.content.length}文字</p>
+                  )}
+                </div>
               </div>
 
-              {/* 行き先 */}
+              {/* 目的地（都道府県） */}
               <div>
                 <label htmlFor="destination" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  行き先 <span className="text-red-500">*</span>
+                  目的地（都道府県） *
                 </label>
-                <input
-                  type="text"
+                <select
                   id="destination"
                   name="destination"
+                  required
                   value={formData.destination}
                   onChange={handleChange}
-                  maxLength={100}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={selectStyle}
+                >
+                  <option value="" disabled>都道府県を選択してください</option>
+                  {PREFECTURES.map((pref) => (
+                    <option key={pref} value={pref}>{pref}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 募集人数 */}
+              <div>
+                <label htmlFor="max_participants" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  募集人数 *
+                </label>
+                <select
+                  id="max_participants"
+                  name="max_participants"
                   required
-                />
+                  value={formData.max_participants}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={selectStyle}
+                >
+                  {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <option key={num} value={num}>{num}人</option>
+                  ))}
+                  <option value={15}>15人</option>
+                  <option value={20}>20人</option>
+                  <option value={30}>30人以上</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  主催者を含む総人数
+                </p>
               </div>
 
               {/* 旅行日 */}
@@ -305,7 +385,7 @@ export default function EditPostPage() {
                   <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  旅行日 <span className="text-red-500">*</span>
+                  開催日時 *
                 </label>
                 <input
                   type="date"
@@ -318,26 +398,112 @@ export default function EditPostPage() {
                 />
               </div>
 
-              {/* 募集人数 */}
+              {/* 開始・終了時間 */}
               <div>
-                <label htmlFor="max_participants" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  予定時間帯
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="time"
+                    name="start_time"
+                    value={formData.start_time}
+                    onChange={handleChange}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  />
+                  <span className="text-gray-500 font-medium">〜</span>
+                  <input
+                    type="time"
+                    name="end_time"
+                    value={formData.end_time}
+                    onChange={handleChange}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">※ 任意。未定の場合は空欄でOKです</p>
+              </div>
+
+              {/* 費用 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  費用
+                </label>
+                <select
+                  name="cost_type"
+                  value={formData.cost_type}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer mb-2"
+                  style={selectStyle}
+                >
+                  <option value="">---</option>
+                  <option value="主催者負担">主催者負担</option>
+                  <option value="割り勘">割り勘</option>
+                  <option value="主催者一部負担">主催者一部負担</option>
+                </select>
+                <input
+                  type="text"
+                  name="cost_note"
+                  value={formData.cost_note}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  placeholder="例：1人あたり500円程度"
+                  maxLength={100}
+                />
+                <p className="text-xs text-gray-500 mt-1">※ 1人あたりの費用目安があれば記入してください</p>
+              </div>
+
+              {/* 対象年齢層 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  対象年齢層
+                </label>
+                <select
+                  name="age_preference"
+                  value={formData.age_preference}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={selectStyle}
+                >
+                  <option value="">---</option>
+                  <option value="年齢不問">年齢不問</option>
+                  <option value="20代歓迎">20代歓迎</option>
+                  <option value="30代歓迎">30代歓迎</option>
+                  <option value="40代歓迎">40代歓迎</option>
+                  <option value="50代歓迎">50代歓迎</option>
+                  <option value="60代歓迎">60代歓迎</option>
+                </select>
+              </div>
+
+              {/* 男女比希望 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  募集人数
+                  男女比希望
                 </label>
-                <input
-                  type="number"
-                  id="max_participants"
-                  name="max_participants"
-                  value={formData.max_participants}
+                <select
+                  name="gender_preference"
+                  value={formData.gender_preference}
                   onChange={handleChange}
-                  min="1"
-                  className="w-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  空欄の場合は人数制限なし
-                </p>
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all appearance-none cursor-pointer"
+                  style={selectStyle}
+                >
+                  <option value="">---</option>
+                  <option value="男女不問">男女不問</option>
+                  <option value="女性限定">女性限定</option>
+                  <option value="男性限定">男性限定</option>
+                  <option value="男女半々希望">男女半々希望</option>
+                </select>
               </div>
 
               {/* ボタン */}
