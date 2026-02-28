@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link';
 
 interface Post {
@@ -186,7 +188,7 @@ export default function EditPostPage() {
           </div>
         </header>
         <main className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
               <div className="text-red-600 mb-4">投稿が見つかりませんでした</div>
               <button
@@ -208,23 +210,27 @@ export default function EditPostPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link href={`/main/posts/${postId}`}>
-              <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+              <Button variant="outline" className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 戻る
-              </button>
+              </Button>
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">投稿を編集</h1>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-6">
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl">投稿の詳細を編集</CardTitle>
+            <p className="text-emerald-50 text-sm mt-1">内容を変更して保存してください</p>
+          </CardHeader>
+          <CardContent className="pt-6">
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-red-700 text-sm">{error}</p>
               </div>
             )}
@@ -248,7 +254,7 @@ export default function EditPostPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                   required
                 />
-                <p className="mt-1 text-sm text-gray-500">{formData.title.length}/100文字</p>
+                <p className="mt-1 text-xs text-gray-500">{formData.title.length}/100文字</p>
               </div>
 
               {/* 内容 */}
@@ -269,7 +275,7 @@ export default function EditPostPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
                   required
                 />
-                <p className="mt-1 text-sm text-gray-500">{formData.content.length}/2000文字</p>
+                <p className="mt-1 text-xs text-gray-500">{formData.content.length}/2000文字</p>
               </div>
 
               {/* 行き先 */}
@@ -329,44 +335,64 @@ export default function EditPostPage() {
                   min="1"
                   className="w-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                 />
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-xs text-gray-500">
                   空欄の場合は人数制限なし
                 </p>
               </div>
 
               {/* ボタン */}
-              <div className="flex gap-4">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {saving ? '保存中...' : '保存する'}
+                  {saving ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      保存中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      保存する
+                    </>
+                  )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => router.back()}
-                  disabled={saving}
-                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold"
-                >
-                  キャンセル
-                </button>
+                <Link href={`/main/posts/${postId}`} className="flex-1">
+                  <Button type="button" variant="outline" disabled={saving} className="w-full h-full border-2 hover:bg-gray-50">
+                    キャンセル
+                  </Button>
+                </Link>
               </div>
-              
+
               {/* 削除ボタン */}
               <div className="pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={handleDelete}
                   disabled={saving}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-lg hover:shadow-xl"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
-                  {saving ? '削除中...' : 'この投稿を削除'}
+                  {saving ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      削除中...
+                    </>
+                  ) : 'この投稿を削除'}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
