@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'みんなのメンバー募集掲示板',
   description: '日帰り・近場から遠出・旅行までの参加者を募集できる掲示板SNS',
   verification: {
-    google: '7e5c55abafaafe74',
+    google: 'x17nbKDHRVzY3Zg86BAsPrP932dttvUuxs1YySoJm-o',
   },
 };
 
