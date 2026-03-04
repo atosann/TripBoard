@@ -214,67 +214,6 @@ export default function MainPage() {
         </div>
       </header>
 
-      {/* 特徴セクション */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
-            こんなことができます
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-emerald-100">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
-                🎯
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">イベント投稿</h3>
-              <p className="text-gray-600 leading-relaxed">
-                カラオケ、スポーツ、飲み会など、あなたのやりたいことを自由に投稿できます
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-blue-100">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
-                💬
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">チャット機能</h3>
-              <p className="text-gray-600 leading-relaxed">
-                参加者とリアルタイムでチャット。詳細な待ち合わせ場所などもスムーズに調整
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-purple-100">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
-                🤝
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">仲間との出会い</h3>
-              <p className="text-gray-600 leading-relaxed">
-                同じ趣味を持つ仲間と出会い、一緒に楽しい時間を過ごせます
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* カテゴリセクション */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">
-            人気のカテゴリ
-          </h2>
-          <p className="text-center text-gray-600 mb-12">
-            様々なジャンルのメンバー募集が集まっています
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => (
-              <div
-                key={category.name}
-                className={`${category.color} border-2 rounded-xl p-6 text-center hover:scale-105 transition-all cursor-pointer shadow-sm hover:shadow-md`}
-              >
-                <div className="text-4xl mb-2">{category.icon}</div>
-                <div className="font-bold text-sm">{category.name}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ===== 新着・最近の投稿セクション（実データ） ===== */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -381,6 +320,67 @@ export default function MainPage() {
               </Link>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* 特徴セクション */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
+            こんなことができます
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-emerald-100">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+                🎯
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">イベント投稿</h3>
+              <p className="text-gray-600 leading-relaxed">
+                カラオケ、スポーツ、飲み会など、あなたのやりたいことを自由に投稿できます
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-blue-100">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+                💬
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">チャット機能</h3>
+              <p className="text-gray-600 leading-relaxed">
+                参加者とリアルタイムでチャット。詳細な待ち合わせ場所などもスムーズに調整
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-purple-100">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+                🤝
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">仲間との出会い</h3>
+              <p className="text-gray-600 leading-relaxed">
+                同じ趣味を持つ仲間と出会い、一緒に楽しい時間を過ごせます
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* カテゴリセクション */}
+      <section className="py-16 px-4 bg-white">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-4 text-gray-900">
+            人気のカテゴリ
+          </h2>
+          <p className="text-center text-gray-600 mb-12">
+            様々なジャンルのメンバー募集が集まっています
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map((category) => (
+              <div
+                key={category.name}
+                className={`${category.color} border-2 rounded-xl p-6 text-center hover:scale-105 transition-all cursor-pointer shadow-sm hover:shadow-md`}
+              >
+                <div className="text-4xl mb-2">{category.icon}</div>
+                <div className="font-bold text-sm">{category.name}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
