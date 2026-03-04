@@ -70,7 +70,7 @@ export default function PublicPostsPage() {
                 ログイン
               </Link>
               <Link
-                href="/auth/signup"
+                href="/auth/register"
                 className="w-full border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 py-3 rounded-lg font-semibold transition-all"
               >
                 新規登録
@@ -99,7 +99,7 @@ export default function PublicPostsPage() {
                 ログイン
               </Link>
               <Link
-                href="/auth/signup"
+                href="/auth/register"
                 className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg font-semibold text-sm shadow-lg transition-all"
               >
                 新規登録
