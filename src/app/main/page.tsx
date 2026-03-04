@@ -60,32 +60,15 @@ export default function MainPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-
-      {/* カテゴリセクション */}
-      <section className="py-12 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-2xl font-bold mb-2 text-gray-900">カテゴリから探す</h2>
-          <p className="text-gray-500 text-sm mb-6">気になるカテゴリをタップして募集を見てみよう</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                href="/auth/login"
-                className={`${category.color} border-2 rounded-xl p-6 text-center hover:scale-105 transition-all shadow-sm hover:shadow-md`}
-              >
-                <div className="text-4xl mb-2">{category.icon}</div>
-                <div className="font-bold text-sm">{category.name}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-gray-50">
 
       {/* 新着投稿セクション */}
-      <section className="py-12 px-4">
+      <section className="py-12 px-4 bg-white">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-2xl font-bold mb-2 text-gray-900">🆕 新着の募集</h2>
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-2xl font-bold text-gray-900">新着の募集</h2>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">NEW</span>
+          </div>
           <p className="text-gray-500 text-sm mb-6">最近投稿されたメンバー募集です</p>
 
           {loadingPosts ? (
@@ -184,6 +167,26 @@ export default function MainPage() {
               </Link>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* カテゴリセクション */}
+      <section className="py-12 px-4 bg-white border-t border-gray-100">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-2xl font-bold mb-2 text-gray-900">カテゴリから探す</h2>
+          <p className="text-gray-500 text-sm mb-6">気になるカテゴリをタップして募集を見てみよう</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map((category) => (
+              <Link
+                key={category.name}
+                href="/auth/login"
+                className={`${category.color} border-2 rounded-xl p-6 text-center hover:scale-105 transition-all shadow-sm hover:shadow-md`}
+              >
+                <div className="text-4xl mb-2">{category.icon}</div>
+                <div className="font-bold text-sm">{category.name}</div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
